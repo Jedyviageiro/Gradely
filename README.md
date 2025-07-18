@@ -13,8 +13,8 @@ Gradely is a full-stack web application designed to provide instant, AI-driven f
 ## Tech Stack
 
 -   **Backend:** Node.js, Express.js
--   **Frontend:** Modern JavaScript Framework (e.g., React, Vue, Svelte)
--   **Database:** SQL Database (e.g., PostgreSQL, MySQL)
+-   **Frontend:** Modern JavaScript Framework (React)
+-   **Database:** SQL Database (PostgreSQL)
 -   **AI:** Google Gemini API
 -   **Containerization:** Docker, Docker Compose
 
