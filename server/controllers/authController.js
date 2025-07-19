@@ -50,7 +50,16 @@ const signup = async(req, res) => {
         return res.status(403).json({ error: 'Email not confirmed' });
       }
       const token = jwt.sign({ user_id: user.user_id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
-      res.json({ token });
+      
+      // Create a user object to send to the client, excluding sensitive data
+      const userForClient = {
+        user_id: user.user_id,
+        email: user.email,
+        first_name: user.first_name,
+        last_name: user.last_name,
+      };
+
+      res.json({ token, user: userForClient });
     } catch (error) {
       console.error("Login error:", error);
       res.status(500).json({ 

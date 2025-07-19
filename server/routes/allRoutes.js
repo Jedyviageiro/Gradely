@@ -13,6 +13,7 @@ router.get('/confirm-email/:token', authController.confirmEmail);
 router.post('/forgot-password', authController.forgotPassword);
 router.post('/reset-password', authController.resetPassword);
 
+
 // Essay Routes (protected)
 router.post('/essays', authMiddleware, uploadMiddleware, essayController.uploadEssay);
 router.get('/essays', authMiddleware, essayController.getUserEssays);
