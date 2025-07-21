@@ -125,6 +125,26 @@ const api = {
     });
     return handleResponse(response);
   },
+
+  deleteEssay: async (token, essay_id) => {
+    const response = await fetch(`${API_URL}/essays/${essay_id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    return handleResponse(response);
+  },
+
+  updateEssayTitle: async (token, essay_id, title) => {
+    const response = await fetch(`${API_URL}/essays/${essay_id}`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ title }),
+    });
+    return handleResponse(response);
+  },
 };
 
 export default api;

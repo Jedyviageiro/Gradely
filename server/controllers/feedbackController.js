@@ -97,26 +97,31 @@ const generateFeedback = async (req, res) => {
       }
     }
 
-    // Validate response data
+    // Parse and validate data from AI response
+    const originalityScore = Math.round(Number(feedbackData.originality_score));
+    const typoScore = Math.round(Number(feedbackData.typo_score));
+
     if (
-      !feedbackData.feedback_text ||
-      !Number.isInteger(feedbackData.typo_score) ||
-      !Number.isInteger(feedbackData.originality_score) ||
-      feedbackData.typo_score < 1 || feedbackData.typo_score > 10 ||
-      feedbackData.originality_score < 1 || feedbackData.originality_score > 10
+      !Array.isArray(feedbackData.feedback_text) ||
+      isNaN(originalityScore) ||
+      isNaN(typoScore) ||
+      typoScore < 1 || typoScore > 10 ||
+      originalityScore < 1 || originalityScore > 10 ||
+      !feedbackData.analysis
     ) {
       return res.status(500).json({ error: 'Invalid AI response format', rawResponse: response });
     }
 
     // Store feedback in database
-    const feedback = await Feedback.createFeedback(
+    await Feedback.createFeedback(
       essay_id,
-      feedbackData.feedback_text,
-      feedbackData.originality_score,
-      feedbackData.typo_score
+      JSON.stringify(feedbackData.feedback_text), // Store structured text as a JSON string
+      originalityScore,
+      typoScore
     );
 
-    res.status(201).json(feedback);
+    // Send the full structured data from the AI to the client
+    res.status(201).json(feedbackData);
   } catch (err) {
     console.error('Error generating feedback:', err);
     res.status(500).json({ error: `Failed to generate feedback: ${err.message}` });

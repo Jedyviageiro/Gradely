@@ -1,6 +1,7 @@
 const { Essay } = require('../models');
 const fs = require('fs').promises;
 const pdf = require('pdf-parse');
+const multer = require('multer');
 
 const uploadEssay = async (req, res) => {
   try {
@@ -105,7 +106,7 @@ const uploadEssay = async (req, res) => {
 const getUserEssays = async (req, res) => {
   try {
     const { user_id } = req.user;
-    const essays = await Essay.findByUser(user_id);
+    const essays = await Essay.findEssayByUser(user_id);
     res.json(essays);
   } catch (err) {
     console.error('Error retrieving user essays:', err);
@@ -116,7 +117,7 @@ const getUserEssays = async (req, res) => {
 const getEssayById = async (req, res) => {
   try {
     const { essay_id } = req.params;
-    const essay = await Essay.findById(essay_id);
+    const essay = await Essay.findEssayById(essay_id);
     if (!essay || essay.user_id !== req.user.user_id) {
       return res.status(403).json({ error: 'Unauthorized or essay not found' });
     }
@@ -127,8 +128,50 @@ const getEssayById = async (req, res) => {
   }
 };
 
+const deleteEssay = async (req, res) => {
+  try {
+    // The fix is to get essay_id from req.params
+    const { essay_id } = req.params;
+    const { user_id } = req.user; // CORRECT: Use user_id, consistent with other controllers
+
+    // A check to ensure we have a valid ID before proceeding
+    if (!essay_id) {
+      return res.status(400).json({ error: 'Essay ID is required.' });
+    }
+
+    await Essay.deleteEssay(essay_id, user_id);
+
+    res.status(200).json({ message: 'Essay deleted successfully.' });
+  } catch (error) {
+    console.error('Error in deleteEssay controller:', error);
+    res.status(500).json({ error: 'Failed to delete essay.' });
+  }
+};
+
+
+const updateEssayTitle = async (req, res) => {
+  try {
+    const { essay_id } = req.params;
+    const { user_id } = req.user;
+    const { title } = req.body;
+    if (!title || typeof title !== 'string' || !title.trim()) {
+      return res.status(400).json({ error: 'Title is required' });
+    }
+    const updated = await Essay.updateEssayTitle(essay_id, user_id, title.trim());
+    if (!updated) {
+      return res.status(404).json({ error: 'Essay not found or not authorized' });
+    }
+    res.json({ message: 'Essay title updated', essay: updated });
+  } catch (err) {
+    console.error('Error updating essay title:', err);
+    res.status(500).json({ error: 'Failed to update essay title' });
+  }
+};
+
 module.exports = {
   uploadEssay,
   getUserEssays,
   getEssayById,
+  deleteEssay,
+  updateEssayTitle,
 };

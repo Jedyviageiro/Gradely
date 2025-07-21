@@ -7,6 +7,7 @@ import ResetPassword from './pages/ResetPassword.jsx';
 import ConfirmEmail from './pages/ConfirmEmail.jsx';
 import UserDashboard from './pages/UserDashboard.jsx';
 import ProtectedRoute from './components/auth/ProtectedRoute.jsx';
+import GenerateFeedback from './pages/GenerateFeedback.jsx';
 
 function App() {
   return (
@@ -25,6 +26,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <UserDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/generate-feedback"
+              element={
+                <ProtectedRoute>
+                  <GenerateFeedback />
                 </ProtectedRoute>
               }
             />

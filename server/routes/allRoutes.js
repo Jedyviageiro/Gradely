@@ -18,6 +18,8 @@ router.post('/reset-password', authController.resetPassword);
 router.post('/essays', authMiddleware, uploadMiddleware, essayController.uploadEssay);
 router.get('/essays', authMiddleware, essayController.getUserEssays);
 router.get('/essays/:essay_id', authMiddleware, essayController.getEssayById);
+router.delete('/essays/:essay_id', authMiddleware, essayController.deleteEssay);
+router.patch('/essays/:essay_id', authMiddleware, essayController.updateEssayTitle);
 
 // Feedback Routes (protected)
 router.post('/essays/:essay_id/feedback', authMiddleware, feedbackController.generateFeedback);

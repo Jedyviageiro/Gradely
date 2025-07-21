@@ -3,16 +3,19 @@ const pool = require('../config/db');
 const createFeedback = async (essay_id, feedback_text, originality_score, typo_score) => {
   try {
     // Validate inputs
-    if (!essay_id || !feedback_text || !Number.isInteger(originality_score) || !Number.isInteger(typo_score)) {
-      throw new Error('Invalid input: All fields are required and scores must be integers');
+    const os = Math.round(Number(originality_score));
+    const ts = Math.round(Number(typo_score));
+
+    if (!essay_id || !feedback_text || isNaN(os) || isNaN(ts)) {
+      throw new Error('Invalid input: All fields are required and scores must be valid numbers');
     }
-    if (originality_score < 1 || originality_score > 10 || typo_score < 1 || typo_score > 10) {
+    if (os < 1 || os > 10 || ts < 1 || ts > 10) {
       throw new Error('Scores must be between 1 and 10');
     }
 
     const result = await pool.query(
       'INSERT INTO feedback (essay_id, feedback_text, originality_score, typo_score) VALUES ($1, $2, $3, $4) RETURNING *',
-      [essay_id, feedback_text, originality_score, typo_score]
+      [essay_id, feedback_text, os, ts]
     );
     return result.rows[0];
   } catch (err) {
