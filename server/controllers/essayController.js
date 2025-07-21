@@ -1,4 +1,4 @@
-const { Essay } = require('../models');
+const { Essay, Feedback } = require('../models');
 const fs = require('fs').promises;
 const pdf = require('pdf-parse');
 const multer = require('multer');
@@ -138,10 +138,24 @@ const withRetry = async (apiCall, maxRetries = 3, initialDelay = 500) => {
       return await apiCall();
     } catch (err) {
       attempt++;
-      // Only retry on 503 Service Unavailable errors
-      if (err.status === 503 && attempt < maxRetries) {
-        const delay = initialDelay * Math.pow(2, attempt - 1);
-        console.log(`AI service unavailable (503). Retrying attempt ${attempt} in ${delay}ms...`);
+      // Check if we should retry for rate limiting or service availability issues
+      if ((err.status === 429 || err.status === 503) && attempt < maxRetries) {
+        let delay = initialDelay * Math.pow(2, attempt - 1); // Default exponential backoff
+        const reason = err.status === 429 ? 'Rate limit hit' : 'Service unavailable';
+
+        // For rate limiting, the API might suggest a specific delay. Let's use it.
+        if (err.status === 429) {
+          const retryInfo = err.errorDetails?.find(d => d['@type'] === 'type.googleapis.com/google.rpc.RetryInfo');
+          if (retryInfo?.retryDelay) {
+            const seconds = parseInt(retryInfo.retryDelay.replace('s', ''), 10);
+            if (!isNaN(seconds)) {
+              // Use the suggested delay plus a small buffer
+              delay = (seconds * 1000) + 500;
+            }
+          }
+        }
+
+        console.log(`AI service ${reason} (${err.status}). Retrying attempt ${attempt} in ${delay}ms...`);
         await new Promise(res => setTimeout(res, delay));
       } else {
         // For other errors or after all retries, throw the error
@@ -171,7 +185,7 @@ const getSuggestions = async (req, res) => {
     const finalPrompt = prompt.replace('{{ESSAY_CONTENT}}', content);
 
     // Use a faster model if available, or the default one
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' }); // Using a faster model for real-time
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' }); // Using a faster model for real-time
     
     // Wrap the API call with the retry logic
     const result = await withRetry(() => model.generateContent(finalPrompt));
@@ -256,6 +270,60 @@ const updateEssayTitle = async (req, res) => {
   }
 };
 
+const chatWithEssay = async (req, res) => {
+  try {
+    const { essay_id } = req.params;
+    const { user_id } = req.user;
+    const { question } = req.body;
+
+    if (!question || typeof question !== 'string' || !question.trim()) {
+      return res.status(400).json({ error: 'A question is required.' });
+    }
+
+    // 1. Fetch the essay and its feedback
+    const essay = await Essay.findEssayById(essay_id);
+    if (!essay || essay.user_id !== user_id) {
+      return res.status(403).json({ error: 'Unauthorized or essay not found' });
+    }
+
+    // The model might return an array of feedbacks, so we handle that case.
+    let feedbackResult = await Feedback.findFeedbackByEssayId(essay_id);
+    const feedbackRecord = Array.isArray(feedbackResult) ? feedbackResult[0] : feedbackResult;
+
+    if (!feedbackRecord) {
+      return res.status(404).json({ error: 'No feedback found for this essay. Cannot start chat.' });
+    }
+
+    // 2. Load the prompt
+    const promptPath = path.join(__dirname, '../config/prompts/chat_prompt.txt');
+    const promptTemplate = await fs.readFile(promptPath, 'utf8');
+
+    // The feedback content is stored in the 'feedback_text' property.
+    const feedbackText = feedbackRecord.feedback_text;
+
+    if (!feedbackText) {
+      console.error('Could not find feedback content on the feedback object:', feedbackRecord);
+      return res.status(500).json({ error: 'The content for the requested feedback could not be found or is empty.' });
+    }
+
+    // 3. Construct the final prompt
+    const finalPrompt = promptTemplate
+      .replace('{{ESSAY_CONTENT}}', essay.content)
+      .replace('{{ESSAY_FEEDBACK}}', feedbackText)
+      .replace('{{USER_QUESTION}}', question);
+
+    // 4. Call the AI model
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const result = await withRetry(() => model.generateContent(finalPrompt));
+    const response = result.response.text();
+
+    res.status(200).json({ response });
+  } catch (err) {
+    console.error('Error in chatWithEssay:', err);
+    res.status(500).json({ error: 'Failed to get a response from Gradely.' });
+  }
+};
+
 module.exports = {
   uploadEssay,
   createEssayFromText,
@@ -264,4 +332,5 @@ module.exports = {
   getEssayById,
   deleteEssay,
   updateEssayTitle,
+  chatWithEssay,
 };

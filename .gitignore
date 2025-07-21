@@ -36,4 +36,4 @@ dist/
 
 # === Server specific ===
 server/tmp/
-server/config/prompts/prompt.txt
+server/config/prompts/*.txt

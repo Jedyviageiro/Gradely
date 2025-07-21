@@ -23,6 +23,7 @@ router.patch('/essays/:essay_id', authMiddleware, essayController.updateEssayTit
 
 router.post('/essays/write', authMiddleware, essayController.createEssayFromText);
 router.post('/essays/suggest', authMiddleware, essayController.getSuggestions);
+router.post('/essays/:essay_id/chat', authMiddleware, essayController.chatWithEssay);
 
 // Feedback Routes (protected)
 router.post('/essays/:essay_id/feedback', authMiddleware, feedbackController.generateFeedback);
