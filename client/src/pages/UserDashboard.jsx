@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Upload, MessageCircle, LogOut, Menu, Search, Grid, List, Wand2, Edit2, MessageSquare, X, Send } from 'lucide-react';
+import { FileText, Upload, MessageCircle, LogOut, Menu, Search, Grid, List, Wand2, Edit2, MessageSquare, X, Send, BookOpen } from 'lucide-react';
 import api from '../services/api';
 import UploadEssayForm from '../components/essay/UploadEssayForm';
 import EssayCard from '../components/essay/EssayCard';
@@ -8,13 +8,8 @@ import EssayListItem from '../components/essay/EssayListItem';
 import Modal from '../components/ui/Modal';
 import WriteEssayForm from '../components/essay/WriteEssayForm';
 import gradelyLogo from '../assets/gradely-images/gradely-logo.png';
+import { useChatModal } from '../context/ChatModalContext';
 
-const navItems = [
-  { label: 'My Essays', icon: <FileText size={20} />, path: '/dashboard' },
-  { label: 'Generate Feedback', icon: <Wand2 size={20} />, path: '/generate-feedback' },
-  { label: 'All Feedback', icon: <MessageCircle size={20} />, path: '/feedbacks' },
-  { label: 'Text Gradely', icon: <MessageSquare size={20} />, path: null },
-];
 
 const GenerateFeedbackView = ({ essays, onGenerateClick }) => {
   const essaysToReview = essays.filter(essay => !essay.feedback); // Assuming `feedback` field indicates review status
@@ -58,9 +53,7 @@ const filterTabs = [
 ];
 
 const UserDashboard = () => {
-  const [sidebarActive, setSidebarActive] = useState('My Essays');
   const [activeTab, setActiveTab] = useState('Recent');
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [viewMode, setViewMode] = useState('grid');
   const [essays, setEssays] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -76,15 +69,15 @@ const UserDashboard = () => {
   const [chatInput, setChatInput] = useState('');
   const [isChatLoading, setIsChatLoading] = useState(false);
   const reviewedEssays = useMemo(() => essays.filter(e => e.has_feedback), [essays]);
-
+  useChatModal();
+  
   // Refs for animations
   const tabRefs = useRef([]);
-  const navItemRefs = useRef([]);
+  // Ref for chat container
   const chatContainerRef = useRef(null);
 
   // State for animation styles
   const [underlineStyle, setUnderlineStyle] = useState({});
-  const [indicatorStyle, setIndicatorStyle] = useState({});
 
   const logout = useCallback(() => {
     console.log('Logging out and clearing token...');
@@ -191,18 +184,6 @@ const UserDashboard = () => {
     }
   }, [activeTab]);
 
-  // Effect for sidebar indicator animation
-  useEffect(() => {
-    const activeNavIndex = navItems.findIndex(item => item.label === sidebarActive);
-    const activeNavEl = navItemRefs.current[activeNavIndex];
-    if (activeNavEl) {
-      setIndicatorStyle({
-        top: activeNavEl.offsetTop,
-        height: activeNavEl.offsetHeight,
-      });
-    }
-  }, [sidebarActive, sidebarOpen]);
-
   // Effect for chat auto-scrolling
   useEffect(() => {
     if (chatContainerRef.current) {
@@ -215,7 +196,7 @@ const UserDashboard = () => {
     if (selectedEssayId && chatMessages.length === 0) {
       const selectedEssay = essays.find(e => e.essay_id === selectedEssayId);
       setChatMessages([
-        { role: 'assistant', text: `Hi! I'm Gradely. Feel free to ask me anything about the feedback for your essay, "${selectedEssay?.title || 'this essay'}".` },
+        { role: 'assistant', text: `Hi! I'm Gradely. Feel free to ask me anything about the feedback for your essay, "${selectedEssay?.title || ''}".` },
       ]);
     }
   }, [selectedEssayId, essays]);
@@ -253,247 +234,183 @@ const UserDashboard = () => {
   }, [essays, activeTab, searchQuery]);
 
   return (
-    <div className="min-h-screen flex bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50">
-      {/* Sidebar */}
-      <aside className={`${sidebarOpen ? 'w-64' : 'w-16'} bg-white/80 backdrop-blur-xl border-r border-white/20 flex flex-col transition-all duration-300 ease-in-out`}>
-        {/* Sidebar Header */}
-        <div className="flex items-center justify-between p-4">
-          <button
-            className="p-2 rounded-lg hover:bg-black/5 transition-all duration-150 hover:scale-105 active:scale-95"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
-          >
-            <Menu size={20} className="text-gray-600" />
-          </button>
-        </div>
-
-        {/* Navigation */}
-        <nav className="flex-1 p-2 relative">
-          <div
-            className="absolute left-0 w-1 bg-gradient-to-b from-blue-500 to-blue-600 rounded-r-full transition-all duration-300 ease-in-out"
-            style={indicatorStyle}
-          />
-          <div className="space-y-1">
-            {navItems.map((item, index) => (
-              <button
-                ref={el => (navItemRefs.current[index] = el)}
-                key={item.label}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-150 ease-out group relative overflow-hidden ${
-                  sidebarActive === item.label
-                    ? 'bg-gradient-to-r from-blue-50 to-blue-100/50 text-blue-700 shadow-sm border border-blue-200/50'
-                    : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100/50 hover:shadow-sm hover:scale-[1.02] active:scale-[0.98]'
-                }`}
-                onClick={() => {
-                  setSidebarActive(item.label);
-                  if (item.label === 'Text Gradely') {
-                    setChatModalOpen(true);
-                  } else if (item.path) {
-                    navigate(item.path);
-                  }
-                }}
-                title={!sidebarOpen ? item.label : ''}
-              >
-                <span className={`transition-all duration-150 ${sidebarActive === item.label ? 'text-blue-600 scale-110' : 'text-gray-500 group-hover:text-gray-700'}`}>
-                  {item.icon}
-                </span>
-                {sidebarOpen && (
-                  <span className="transition-all duration-150">{item.label}</span>
-                )}
-              </button>
-            ))}
-          </div>
-        </nav>
-
-        {/* Logout */}
-        <div className="p-2 border-t border-gray-200">
-          <button
-            className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100/50 rounded-lg transition-all duration-150 hover:scale-[1.02] active:scale-[0.98] group"
-            onClick={logout}
-            title={!sidebarOpen ? 'Logout' : ''}
-          >
-            <LogOut size={20} className="text-gray-500 group-hover:text-red-500 transition-colors duration-150" />
-            {sidebarOpen && <span className="transition-all duration-150">Logout</span>}
-          </button>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col min-h-screen">
-        {/* Header */}
-        <header className="bg-white/80 backdrop-blur-xl border-b border-white/20 px-6 py-4 sticky top-0 z-30">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50">
+      {/* Header */}
+      <header className="bg-white/80 backdrop-blur-xl border-b border-gray-200/80 px-6 py-4 sticky top-0 z-30 w-full">
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
               {/* Empty space for alignment */}
             </div>
-            
-            <div className="flex items-center gap-4">
-              {/* Search */}
-              <div className="relative">
-                <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search essays..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-2 w-80 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                />
-              </div>
-              <button
-                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-                onClick={() => setUploadModalOpen(true)}
-              >
-                <Upload size={16} />
-                Upload Essay
-              </button>
-              <button
-                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-                onClick={() => setWriteModalOpen(true)}
-              >
-                <Edit2 size={16} />
-                Write an Essay
-              </button>
-            </div>
-          </div>
-        </header>
-
-        {/* Content */}
-        <main className="flex-1 p-6">
-          {/* Filter Tabs and View Toggle */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex border-b border-gray-200 relative">
-              {filterTabs.map((tab, index) => (
-                <button
-                  ref={el => (tabRefs.current[index] = el)}
-                  key={tab}
-                  className={`px-4 py-2 text-sm font-medium transition-colors ${
-                    activeTab === tab
-                      ? 'text-blue-600'
-                      : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                  onClick={() => setActiveTab(tab)}
-                >
-                  {tab}
-                </button>
-              ))}
-              <div
-                className="absolute bottom-0 h-0.5 bg-blue-600 rounded-full transition-all duration-300 ease-in-out"
-                style={underlineStyle}
+          
+          {/* Search and Actions */}
+          <div className="flex items-center gap-2 md:gap-4">
+            {/* Search */}
+            <div className="relative">
+              <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search essays..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 pr-4 py-2 w-48 md:w-80 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
               />
             </div>
-            
-            {/* View Mode Toggle */}
-            <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
-              <button
-                className={`p-2 rounded transition-colors ${
-                  viewMode === 'grid' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'
-                }`}
-                onClick={() => setViewMode('grid')}
-              >
-                <Grid size={16} className="text-gray-600" />
-              </button>
-              <button
-                className={`p-2 rounded transition-colors ${
-                  viewMode === 'list' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'
-                }`}
-                onClick={() => setViewMode('list')}
-              >
-                <List size={16} className="text-gray-600" />
-              </button>
-            </div>
+            <button
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-3 md:px-4 py-2 rounded-lg font-medium transition-colors"
+              onClick={() => setUploadModalOpen(true)}
+            >
+              <Upload size={16} />
+              <span className="hidden md:inline">Upload</span>
+            </button>
+            <button
+              className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-3 md:px-4 py-2 rounded-lg font-medium transition-colors"
+              onClick={() => setWriteModalOpen(true)}
+            >
+              <Edit2 size={16} />
+              <span className="hidden md:inline">Write</span>
+            </button>
           </div>
+        </div>
+      </header>
 
-          {/* Content Area: Now dynamic based on API call */}
-          {isLoading ? (
-            <div className="flex-1 flex items-center justify-center text-gray-500">Loading essays...</div>
-          ) : error ? (
-            <div className="flex-1 flex flex-col items-center justify-center min-h-[400px] bg-red-50 rounded-xl border-2 border-dashed border-red-200 p-8 text-center">
-              <h3 className="text-lg font-medium text-red-800 mb-3">Something went wrong</h3>
-              <p className="text-red-600">{error}</p>
-            </div>
-          ) : essays.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center min-h-[400px] bg-white rounded-xl border-2 border-dashed border-gray-300 p-8">
-              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-6">
-                <FileText size={20} className="text-gray-400" />
-              </div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-500 bg-clip-text text-transparent mb-2">No Essays Yet</h1>
-              <p className="text-gray-500 mb-8 text-center max-w-sm leading-relaxed">
-                Get started by uploading your first essay. You'll be able to track feedback and submissions here.
-              </p>
+      {/* Content */}
+      <main className="flex-1 p-6">
+        {/* Filter Tabs and View Toggle */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex border-b border-gray-200 relative">
+            {filterTabs.map((tab, index) => (
               <button
-                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-                onClick={() => setUploadModalOpen(true)}
+                ref={el => (tabRefs.current[index] = el)}
+                key={tab}
+                className={`px-4 py-2 text-sm font-medium transition-colors ${
+                  activeTab === tab
+                    ? 'text-blue-600'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+                onClick={() => setActiveTab(tab)}
               >
-                <Upload size={16} />
-                Upload Your First Essay
+                {tab}
               </button>
-            </div>
-          ) : filteredEssays.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center min-h-[400px] bg-white rounded-xl border-2 border-dashed border-gray-300 p-8 text-center">
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-500 bg-clip-text text-transparent mb-2">No Essays Found</h1>
-              <p className="text-gray-500 max-w-sm leading-relaxed">
-                There are no essays that match the "{activeTab}" filter.
-              </p>
-            </div>
-          ) : (
-            <>
-              {viewMode === 'grid' ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {filteredEssays.map((essay) => (
-                    <EssayCard
-                      key={essay.essay_id}
-                      essay={essay}
-                      onDelete={() => handleDeleteEssay(essay.essay_id)}
-                      onEditTitle={(newTitle) => handleUpdateEssay(essay.essay_id, newTitle)}
-                      highlight={searchQuery}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {filteredEssays.map((essay) => (
-                    <EssayListItem
-                      key={essay.essay_id}
-                      essay={essay}
-                      onDelete={() => handleDeleteEssay(essay.essay_id)}
-                      onEditTitle={(newTitle) => handleUpdateEssay(essay.essay_id, newTitle)}
-                      highlight={searchQuery}
-                    />
-                  ))}
-                </div>
-              )}
-            </>
-          )}
-          {/* Upload Essay Modal */}
-          <Modal open={uploadModalOpen} onClose={() => setUploadModalOpen(false)} >
-            <UploadEssayForm
-              onClose={() => setUploadModalOpen(false)}
-              onUploadSuccess={handleUploadSuccess}
+            ))}
+            <div
+              className="absolute bottom-0 h-0.5 bg-blue-600 rounded-full transition-all duration-300 ease-in-out"
+              style={underlineStyle}
             />
-          </Modal>
-          <Modal open={writeModalOpen} onClose={() => setWriteModalOpen(false)}>
-            <WriteEssayForm
-              onClose={() => setWriteModalOpen(false)}
-              onSubmit={async ({ title, content }) => {
-                setSubmittingEssay(true);
-                try {
-                  const token = localStorage.getItem('token');
-                  await api.createEssayFromText(token, title, content);
-                  setWriteModalOpen(false);
-                  fetchEssays();
-                } catch (err) {
-                  // You can enhance this by showing the error in the form
-                  console.error("Failed to submit written essay:", err);
-                  alert(err.message || "Could not submit essay.");
-                } finally {
-                  setSubmittingEssay(false);
-                }
-              }}
-              submitting={submittingEssay}
-            />
-          </Modal>
+          </div>
+          
+          {/* View Mode Toggle */}
+          <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
+            <button
+              className={`p-2 rounded transition-colors ${
+                viewMode === 'grid' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'
+              }`}
+              onClick={() => setViewMode('grid')}
+            >
+              <Grid size={16} className="text-gray-600" />
+            </button>
+            <button
+              className={`p-2 rounded transition-colors ${
+                viewMode === 'list' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'
+              }`}
+              onClick={() => setViewMode('list')}
+            >
+              <List size={16} className="text-gray-600" />
+            </button>
+          </div>
+        </div>
 
-          {/* Chat Modal--------------------------------------------------------------- */}
-          <Modal open={chatModalOpen} onClose={() => setChatModalOpen(false)}>
+        {/* Content Area: Now dynamic based on API call */}
+        {isLoading ? (
+          <div className="flex-1 flex items-center justify-center text-gray-500">Loading essays...</div>
+        ) : error ? (
+          <div className="flex-1 flex flex-col items-center justify-center min-h-[400px] bg-red-50 rounded-xl border-2 border-dashed border-red-200 p-8 text-center">
+            <h3 className="text-lg font-medium text-red-800 mb-3">Something went wrong</h3>
+            <p className="text-red-600">{error}</p>
+          </div>
+        ) : essays.length === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center min-h-[400px] bg-white rounded-xl border-2 border-dashed border-gray-300 p-8">
+            <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+              <FileText size={20} className="text-gray-400" />
+            </div>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-500 bg-clip-text text-transparent mb-2">No Essays Yet</h1>
+            <p className="text-gray-500 mb-8 text-center max-w-sm leading-relaxed">
+              Get started by uploading your first essay. You'll be able to track feedback and submissions here.
+            </p>
+            <button
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              onClick={() => setUploadModalOpen(true)}
+            >
+              <Upload size={16} />
+              Upload Your First Essay
+            </button>
+          </div>
+        ) : filteredEssays.length === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center min-h-[400px] bg-white rounded-xl border-2 border-dashed border-gray-300 p-8 text-center">
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-500 bg-clip-text text-transparent mb-2">No Essays Found</h1>
+            <p className="text-gray-500 max-w-sm leading-relaxed">
+              There are no essays that match the "{activeTab}" filter.
+            </p>
+          </div>
+        ) : (
+          <>
+            {viewMode === 'grid' ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {filteredEssays.map((essay) => (
+                  <EssayCard
+                    key={essay.essay_id}
+                    essay={essay}
+                    onDelete={() => handleDeleteEssay(essay.essay_id)}
+                    onEditTitle={(newTitle) => handleUpdateEssay(essay.essay_id, newTitle)}
+                    highlight={searchQuery}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {filteredEssays.map((essay) => (
+                  <EssayListItem
+                    key={essay.essay_id}
+                    essay={essay}
+                    onDelete={() => handleDeleteEssay(essay.essay_id)}
+                    onEditTitle={(newTitle) => handleUpdateEssay(essay.essay_id, newTitle)}
+                    highlight={searchQuery}
+                  />
+                ))}
+              </div>
+            )}
+          </>
+        )}
+        {/* Upload Essay Modal */}
+        <Modal open={uploadModalOpen} onClose={() => setUploadModalOpen(false)} >
+          <UploadEssayForm
+            onClose={() => setUploadModalOpen(false)}
+            onUploadSuccess={handleUploadSuccess}
+          />
+        </Modal>
+        <Modal open={writeModalOpen} onClose={() => setWriteModalOpen(false)}>
+          <WriteEssayForm
+            onClose={() => setWriteModalOpen(false)}
+            onSubmit={async ({ title, content }) => {
+              setSubmittingEssay(true);
+              try {
+                const token = localStorage.getItem('token');
+                await api.createEssayFromText(token, title, content);
+                setWriteModalOpen(false);
+                fetchEssays();
+              } catch (err) {
+                // You can enhance this by showing the error in the form
+                console.error("Failed to submit written essay:", err);
+                alert(err.message || "Could not submit essay.");
+              } finally {
+                setSubmittingEssay(false);
+              }
+            }}
+            submitting={submittingEssay}
+          />
+        </Modal>
+
+        {/* Chat Modal--------------------------------------------------------------- */}
+        <Modal open={chatModalOpen} onClose={() => setChatModalOpen(false)}>
   <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl p-0 overflow-hidden flex flex-col poppins-font border border-gray-100">
     {/* Header with logo */}
     <div className="flex items-center gap-4 px-8 py-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
@@ -531,7 +448,7 @@ const UserDashboard = () => {
           >
             <option value="" className="text-gray-500">Select a reviewed essay...</option>
             {reviewedEssays.map(e => (
-              <option key={e.essay_id} value={e.essay_id} className="text-gray-900">{e.title}</option>
+              <option key={e.essay_id} value={e.essay_id}>{e.title}</option>
             ))}
           </select>
           
@@ -553,7 +470,7 @@ const UserDashboard = () => {
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
               <span className="text-sm font-medium text-blue-900">
-                Chatting about: {reviewedEssays.find(e => e.essay_id === selectedEssayId)?.title}
+                Chatting about: {essays.find(e => e.essay_id === selectedEssayId)?.title || ''}
               </span>
             </div>
             <button
@@ -638,7 +555,6 @@ const UserDashboard = () => {
 
         </main>
       </div>
-    </div>
   );
 };
 
