@@ -2,6 +2,12 @@ const { Essay } = require('../models');
 const fs = require('fs').promises;
 const pdf = require('pdf-parse');
 const multer = require('multer');
+const path = require('path');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+require('dotenv').config();
+
+// Initialize Gemini client
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 const uploadEssay = async (req, res) => {
   try {
@@ -103,6 +109,88 @@ const uploadEssay = async (req, res) => {
   }
 };
 
+const createEssayFromText = async (req, res) => {
+  try {
+    const { user_id } = req.user;
+    const { title, content } = req.body;
+
+    if (!title || !content || !title.trim() || !content.trim()) {
+      return res.status(400).json({ error: 'Title and content are required.' });
+    }
+
+    // Sanitize content to remove null bytes, just in case
+    const sanitizedContent = content.replace(/\0/g, '');
+
+    const essay = await Essay.createEssay(user_id, title.trim(), sanitizedContent);
+
+    res.status(201).json(essay);
+  } catch (err) {
+    console.error('Error creating essay from text:', err);
+    res.status(500).json({ error: `Server error during essay creation: ${err.message}` });
+  }
+};
+
+// Helper function to handle API retries with exponential backoff
+const withRetry = async (apiCall, maxRetries = 3, initialDelay = 500) => {
+  let attempt = 0;
+  while (attempt < maxRetries) {
+    try {
+      return await apiCall();
+    } catch (err) {
+      attempt++;
+      // Only retry on 503 Service Unavailable errors
+      if (err.status === 503 && attempt < maxRetries) {
+        const delay = initialDelay * Math.pow(2, attempt - 1);
+        console.log(`AI service unavailable (503). Retrying attempt ${attempt} in ${delay}ms...`);
+        await new Promise(res => setTimeout(res, delay));
+      } else {
+        // For other errors or after all retries, throw the error
+        throw err;
+      }
+    }
+  }
+};
+
+const getSuggestions = async (req, res) => {
+  try {
+    const { content } = req.body;
+    if (!content || typeof content !== 'string' || !content.trim()) {
+      return res.json({ suggestions: [] });
+    }
+
+    // Use the new, lightweight prompt
+    const promptPath = path.join(__dirname, '../config/prompts/suggestion_prompt.txt');
+    let prompt;
+    try {
+      prompt = await fs.readFile(promptPath, 'utf8');
+    } catch (err) {
+      console.error('Failed to read suggestion prompt file:', err);
+      return res.status(500).json({ error: 'Server configuration error' });
+    }
+
+    const finalPrompt = prompt.replace('{{ESSAY_CONTENT}}', content);
+
+    // Use a faster model if available, or the default one
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' }); // Using a faster model for real-time
+    
+    // Wrap the API call with the retry logic
+    const result = await withRetry(() => model.generateContent(finalPrompt));
+
+    const response = result.response.text();
+
+    // Clean and parse the response
+    const cleanedResponse = response.replace(/```json\n|```/g, '').trim();
+    const suggestionData = JSON.parse(cleanedResponse);
+
+    res.status(200).json(suggestionData);
+
+  } catch (err) {
+    console.error('Error getting suggestions:', err);
+    // Return an empty array on failure to avoid interrupting the user
+    res.status(200).json({ suggestions: [] });
+  }
+};
+
 const getUserEssays = async (req, res) => {
   try {
     const { user_id } = req.user;
@@ -170,6 +258,8 @@ const updateEssayTitle = async (req, res) => {
 
 module.exports = {
   uploadEssay,
+  createEssayFromText,
+  getSuggestions,
   getUserEssays,
   getEssayById,
   deleteEssay,

@@ -5,8 +5,16 @@ const AuthContext = createContext();
 
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem('user');
-    return savedUser ? JSON.parse(savedUser) : null;
+    try {
+      const savedUser = localStorage.getItem('user');
+      // If a user is found, parse it. Otherwise, return null.
+      return savedUser ? JSON.parse(savedUser) : null;
+    } catch (error) {
+      // If parsing fails, the stored data is corrupt. Clear it and return null.
+      console.error("Failed to parse user from localStorage:", error);
+      localStorage.removeItem('user');
+      return null;
+    }
   });
   const [token, setToken] = useState(() => localStorage.getItem('token'));
 

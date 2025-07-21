@@ -21,6 +21,9 @@ router.get('/essays/:essay_id', authMiddleware, essayController.getEssayById);
 router.delete('/essays/:essay_id', authMiddleware, essayController.deleteEssay);
 router.patch('/essays/:essay_id', authMiddleware, essayController.updateEssayTitle);
 
+router.post('/essays/write', authMiddleware, essayController.createEssayFromText);
+router.post('/essays/suggest', authMiddleware, essayController.getSuggestions);
+
 // Feedback Routes (protected)
 router.post('/essays/:essay_id/feedback', authMiddleware, feedbackController.generateFeedback);
 router.get('/essays/:essay_id/feedback', authMiddleware, feedbackController.getEssayFeedback);

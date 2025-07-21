@@ -86,6 +86,30 @@ const api = {
     return handleResponse(response);
   },
 
+  createEssayFromText: async (token, title, content) => {
+    const response = await fetch(`${API_URL}/essays/write`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ title, content }),
+    });
+    return handleResponse(response);
+  },
+
+  getSuggestions: async (token, content) => {
+    const response = await fetch(`${API_URL}/essays/suggest`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ content }),
+    });
+    return handleResponse(response);
+  },
+
   getUserEssays: async (token) => {
     const response = await fetch(`${API_URL}/essays`, {
       method: 'GET',

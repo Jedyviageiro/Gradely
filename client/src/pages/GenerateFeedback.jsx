@@ -228,9 +228,8 @@ const GenerateFeedback = () => {
           ) : viewMode === 'grid' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {essays.map(essay => (
-                <div key={essay.essay_id} className="bg-white rounded-xl shadow p-4 flex flex-col items-start justify-between transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
-                  <div className="font-medium text-gray-900 mb-2">{essay.title}</div>
-                  <div className="text-xs text-gray-400 mb-4">Essay ID: {essay.essay_id}</div>
+                <div key={essay.essay_id} className="bg-white rounded-xl shadow p-4 flex flex-col items-start justify-between transition-all duration-200 hover:shadow-lg hover:-translate-y-1 h-full">
+                  <div className="font-medium text-gray-900 mb-4 flex-grow">{essay.title}</div>
                   <button
                     className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-medium transition"
                     onClick={() => handleReview(essay)}
@@ -245,9 +244,8 @@ const GenerateFeedback = () => {
             <div className="space-y-4">
               {essays.map(essay => (
                 <div key={essay.essay_id} className="flex items-center justify-between bg-white rounded-xl shadow p-4 transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
-                  <div>
+                  <div className="flex-1 mr-4">
                     <div className="font-medium text-gray-900">{essay.title}</div>
-                    <div className="text-xs text-gray-400">Essay ID: {essay.essay_id}</div>
                   </div>
                   <button
                     className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-medium transition"

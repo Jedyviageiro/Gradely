@@ -8,6 +8,7 @@ import ConfirmEmail from './pages/ConfirmEmail.jsx';
 import UserDashboard from './pages/UserDashboard.jsx';
 import ProtectedRoute from './components/auth/ProtectedRoute.jsx';
 import GenerateFeedback from './pages/GenerateFeedback.jsx';
+import AllFeedback from './pages/AllFeedback.jsx';
 
 function App() {
   return (
@@ -34,6 +35,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <GenerateFeedback />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/feedbacks"
+              element={
+                <ProtectedRoute>
+                  <AllFeedback />
                 </ProtectedRoute>
               }
             />

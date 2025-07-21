@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Upload, MessageCircle, LogOut, Menu, Search, Grid, List, Wand2 } from 'lucide-react';
+import { FileText, Upload, MessageCircle, LogOut, Menu, Search, Grid, List, Wand2, Edit2 } from 'lucide-react';
 import api from '../services/api';
 import UploadEssayForm from '../components/essay/UploadEssayForm';
 import EssayCard from '../components/essay/EssayCard';
 import EssayListItem from '../components/essay/EssayListItem';
 import Modal from '../components/ui/Modal';
+import WriteEssayForm from '../components/essay/WriteEssayForm';
 
 const navItems = [
   { label: 'My Essays', icon: <FileText size={20} />, path: '/dashboard' },
@@ -65,6 +66,8 @@ const UserDashboard = () => {
   const navigate = useNavigate();
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [writeModalOpen, setWriteModalOpen] = useState(false);
+  const [submittingEssay, setSubmittingEssay] = useState(false);
 
   // Refs for animations
   const tabRefs = useRef([]);
@@ -280,6 +283,13 @@ const UserDashboard = () => {
                 <Upload size={16} />
                 Upload Essay
               </button>
+              <button
+                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                onClick={() => setWriteModalOpen(true)}
+              >
+                <Edit2 size={16} />
+                Write an Essay
+              </button>
             </div>
           </div>
         </header>
@@ -396,6 +406,27 @@ const UserDashboard = () => {
             <UploadEssayForm
               onClose={() => setUploadModalOpen(false)}
               onUploadSuccess={handleUploadSuccess}
+            />
+          </Modal>
+          <Modal open={writeModalOpen} onClose={() => setWriteModalOpen(false)}>
+            <WriteEssayForm
+              onClose={() => setWriteModalOpen(false)}
+              onSubmit={async ({ title, content }) => {
+                setSubmittingEssay(true);
+                try {
+                  const token = localStorage.getItem('token');
+                  await api.createEssayFromText(token, title, content);
+                  setWriteModalOpen(false);
+                  fetchEssays();
+                } catch (err) {
+                  // You can enhance this by showing the error in the form
+                  console.error("Failed to submit written essay:", err);
+                  alert(err.message || "Could not submit essay.");
+                } finally {
+                  setSubmittingEssay(false);
+                }
+              }}
+              submitting={submittingEssay}
             />
           </Modal>
         </main>
