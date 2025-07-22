@@ -66,13 +66,7 @@ const ConfirmEmail = () => {
         <div className="relative z-10 w-full flex flex-col items-center">
           {/* Logo with Gradely text - CENTERED and SMALLER */}
           <div className="flex items-center justify-center gap-2 mb-8">
-            <div className={`p-2 rounded-xl ${
-              isSuccess ? 'bg-gradient-to-br from-emerald-500 to-green-600' :
-              isError ? 'bg-gradient-to-br from-red-500 to-rose-600' :
-              'bg-gradient-to-br from-blue-500 to-indigo-600'
-            }`}>
-              <img src={gradelyLogo} alt="Gradely Logo" className="w-5 h-5 brightness-0 invert" />
-            </div>
+            <img src={gradelyLogo} alt="Gradely Logo" className="w-7 h-7 object-contain" />
             <span className={`text-lg font-bold bg-clip-text text-transparent ${
               isSuccess ? 'bg-gradient-to-r from-emerald-700 to-green-600' :
               isError ? 'bg-gradient-to-r from-red-700 to-rose-600' :

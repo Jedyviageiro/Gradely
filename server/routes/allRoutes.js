@@ -30,4 +30,6 @@ router.post('/essays/:essay_id/feedback', authMiddleware, feedbackController.gen
 router.get('/essays/:essay_id/feedback', authMiddleware, feedbackController.getEssayFeedback);
 router.get('/feedback', authMiddleware, feedbackController.getUserFeedback);
 
+router.post('/essays/correct-grammar', authMiddleware, essayController.correctGrammar);
+
 module.exports = router;

@@ -47,7 +47,7 @@ export default function ChatModal() {
         {/* Header with logo */}
         <div className="flex items-center gap-4 px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
           <div className="flex items-center gap-3">
-            <img src={gradelyLogo} alt="Gradely Logo" className="w-10 h-10 rounded-xl shadow-sm" />
+            <img src={gradelyLogo} alt="Gradely Logo" className="w-8 h-8 object-contain" />
             <div>
               <h2 className="text-2xl font-bold text-gray-900">Text Gradely</h2>
               <p className="text-sm text-gray-600">AI Essay Assistant</p>

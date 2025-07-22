@@ -170,6 +170,18 @@ const api = {
     return handleResponse(response);
   },
 
+  correctGrammar: async (token, text) => {
+    const response = await fetch(`${API_URL}/essays/correct-grammar`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ text }),
+    });
+    return handleResponse(response);
+  },
+
   chatWithEssay: async (token, essay_id, question) => {
     const response = await fetch(`${API_URL}/essays/${essay_id}/chat`, {
       method: 'POST',

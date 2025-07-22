@@ -20,9 +20,7 @@ const Signup = () => {
           <div className="relative z-10 w-full max-w-xs">
             {/* Logo with enhanced styling - CENTERED */}
             <div className="flex items-center justify-center gap-2 mb-6">
-              <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl">
-                <img src={gradelyLogo} alt="Gradely Logo" className="w-6 h-6 brightness-0 invert" />
-              </div>
+              <img src={gradelyLogo} alt="Gradely Logo" className="w-7 h-7 object-contain" />
               <span className="text-lg font-bold bg-gradient-to-r from-blue-700 to-indigo-600 bg-clip-text text-transparent">
                 Gradely
               </span>

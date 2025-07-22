@@ -270,6 +270,34 @@ const updateEssayTitle = async (req, res) => {
   }
 };
 
+const correctGrammar = async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text || typeof text !== 'string' || !text.trim()) {
+      return res.status(400).json({ error: 'No text provided for correction.' });
+    }
+
+    // 1. Load the grammar correction prompt
+    const promptPath = path.join(__dirname, '../config/prompts/grammar_correction_prompt.txt');
+    const promptTemplate = await fs.readFile(promptPath, 'utf8');
+
+    // 2. Construct the final prompt
+    const finalPrompt = promptTemplate.replace('{{TEXT_SNIPPET}}', text);
+
+    // 3. Call the AI model
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' }); // Using a fast and capable model
+    const result = await withRetry(() => model.generateContent(finalPrompt));
+    const response = result.response.text();
+
+    // 4. Send the corrected text back to the client
+    res.status(200).json({ correctedText: response.trim() });
+
+  } catch (err) {
+    console.error('Error in correctGrammar controller:', err);
+    res.status(500).json({ error: 'Failed to get grammar correction.' });
+  }
+};
+
 const chatWithEssay = async (req, res) => {
   try {
     const { essay_id } = req.params;
@@ -333,4 +361,5 @@ module.exports = {
   deleteEssay,
   updateEssayTitle,
   chatWithEssay,
+  correctGrammar,
 };

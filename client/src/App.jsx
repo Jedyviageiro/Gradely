@@ -8,6 +8,7 @@ import ConfirmEmail from './pages/ConfirmEmail.jsx';
 import UserDashboard from './pages/UserDashboard.jsx';
 import ProtectedRoute from './components/auth/ProtectedRoute.jsx';
 import GenerateFeedback from './pages/GenerateFeedback.jsx';
+import LandingPage from './pages/LandingPage.jsx';
 import AllFeedback from './pages/AllFeedback.jsx';
 import ChatModalProvider from './context/ChatModalContext.jsx';
 import ChatModal from './components/ui/ChatModal.jsx';
@@ -52,7 +53,7 @@ function App() {
         <ChatModalProvider essays={essays} fetchEssays={fetchEssays}>
           <div className="min-h-screen bg-gray-100">
             <Routes>
-              <Route path="/" element={<Navigate to="/login" replace />} />
+              <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
