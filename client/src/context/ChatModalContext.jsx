@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback } from 'react';
 import api from '../services/api';
 import { ChatModalContext } from './ChatContext';
 
-export default function ChatModalProvider({ children, essays }) {
+export default function ChatModalProvider({ children, essays, fetchEssays }) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedEssay, setSelectedEssay] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -35,12 +35,16 @@ export default function ChatModalProvider({ children, essays }) {
     }
   }, [essaysList]);
 
-  const openChat = useCallback((essayId = null) => {
+  const openChat = useCallback(async (essayId = null) => {
+    // Always refresh the essay list when opening the chat modal
+    // to ensure the latest feedback status is reflected.
+    if (fetchEssays) await fetchEssays();
+
     setIsOpen(true);
     setMessages([]);
     setError(null);
     selectEssay(essayId);
-  }, [selectEssay]);
+  }, [selectEssay, fetchEssays]);
 
   // Close modal
   const closeChat = useCallback(() => {

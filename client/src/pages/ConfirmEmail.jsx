@@ -32,10 +32,16 @@ const ConfirmEmail = () => {
   const isLoading = status === 'Verifying...';
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-emerald-50 to-teal-100 p-4">
-      <div className="w-full max-w-md bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/20 flex flex-col items-center px-8 py-12 relative overflow-hidden">
-        {/* Subtle background pattern */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-transparent opacity-60" />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-4 relative overflow-hidden">
+      {/* Floating background elements */}
+      <div className="absolute top-20 left-10 w-32 h-32 bg-white/20 rounded-full blur-xl"></div>
+      <div className="absolute top-40 right-20 w-24 h-24 bg-blue-200/30 rounded-full blur-lg"></div>
+      <div className="absolute bottom-32 left-1/4 w-20 h-20 bg-indigo-200/25 rounded-full blur-md"></div>
+      <div className="absolute bottom-20 right-10 w-28 h-28 bg-slate-200/20 rounded-full blur-lg"></div>
+
+      <div className="w-full max-w-md bg-white/60 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 flex flex-col items-center px-8 py-12 relative overflow-hidden">
+        {/* Subtle gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white/70 via-white/50 to-transparent opacity-80 rounded-3xl" />
         
         {/* Dynamic decorative elements based on status */}
         {isSuccess && (
@@ -58,15 +64,22 @@ const ConfirmEmail = () => {
         )}
         
         <div className="relative z-10 w-full flex flex-col items-center">
-          {/* Logo with dynamic styling */}
-          <div className="mb-8">
-            <div className={`p-4 rounded-2xl shadow-lg ${
+          {/* Logo with Gradely text - CENTERED and SMALLER */}
+          <div className="flex items-center justify-center gap-2 mb-8">
+            <div className={`p-2 rounded-xl ${
               isSuccess ? 'bg-gradient-to-br from-emerald-500 to-green-600' :
               isError ? 'bg-gradient-to-br from-red-500 to-rose-600' :
               'bg-gradient-to-br from-blue-500 to-indigo-600'
             }`}>
-              <img src={gradelyLogo} alt="Gradely Logo" className="w-10 h-10 brightness-0 invert" />
+              <img src={gradelyLogo} alt="Gradely Logo" className="w-5 h-5 brightness-0 invert" />
             </div>
+            <span className={`text-lg font-bold bg-clip-text text-transparent ${
+              isSuccess ? 'bg-gradient-to-r from-emerald-700 to-green-600' :
+              isError ? 'bg-gradient-to-r from-red-700 to-rose-600' :
+              'bg-gradient-to-r from-blue-700 to-indigo-600'
+            }`}>
+              Gradely
+            </span>
           </div>
           
           {/* Status icon */}
@@ -90,12 +103,12 @@ const ConfirmEmail = () => {
             )}
           </div>
           
-          {/* Status message */}
+          {/* Status message - CENTERED */}
           <div className="text-center mb-6">
             <h1 className={`text-2xl font-bold mb-3 ${
-              isSuccess ? 'text-emerald-700' :
-              isError ? 'text-red-700' :
-              'text-gray-700'
+              isSuccess ? 'bg-gradient-to-r from-emerald-700 to-green-600 bg-clip-text text-transparent' :
+              isError ? 'bg-gradient-to-r from-red-700 to-rose-600 bg-clip-text text-transparent' :
+              'bg-gradient-to-r from-gray-900 via-blue-800 to-indigo-700 bg-clip-text text-transparent'
             }`}>
               {status}
             </h1>
@@ -107,7 +120,7 @@ const ConfirmEmail = () => {
             )}
             
             {isLoading && (
-              <p className="text-gray-500 text-sm">
+              <p className="text-gray-600 text-sm">
                 Please wait while we verify your email address...
               </p>
             )}
@@ -136,7 +149,7 @@ const ConfirmEmail = () => {
           {/* Error actions */}
           {isError && (
             <div className="w-full text-center">
-              <p className="text-xs text-gray-400 mb-4">
+              <p className="text-xs text-gray-500 mb-4">
                 Need help?{' '}
                 <a href="/contact" className="text-red-600 hover:text-red-700 font-medium transition-colors">
                   Contact support
@@ -153,6 +166,16 @@ const ConfirmEmail = () => {
           'bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-500'
         }`} />
       </div>
+      
+      <style jsx>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
+        }
+        .animate-float {
+          animation: float 3s ease-in-out infinite;
+        }
+      `}</style>
     </div>
   );
 };
