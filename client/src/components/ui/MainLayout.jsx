@@ -1,7 +1,7 @@
 import { useState, useRef, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FileText, BookOpen, Wand2, Edit2, MessageSquare, LogOut, Menu } from 'lucide-react';
-import { useChatModal } from '../../context/ChatModalContext';
+import { useChatModal } from '../../hooks/useChatModal.jsx';
 
 const navItems = [
   { label: 'My Essays', icon: <FileText size={20} />, path: '/dashboard' },

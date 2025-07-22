@@ -9,7 +9,7 @@ import UserDashboard from './pages/UserDashboard.jsx';
 import ProtectedRoute from './components/auth/ProtectedRoute.jsx';
 import GenerateFeedback from './pages/GenerateFeedback.jsx';
 import AllFeedback from './pages/AllFeedback.jsx';
-import { ChatModalProvider } from './context/ChatModalContext.jsx';
+import ChatModalProvider from './context/ChatModalContext.jsx';
 import ChatModal from './components/ui/ChatModal.jsx';
 import { useState, useEffect, useCallback } from 'react';
 import api from './services/api';

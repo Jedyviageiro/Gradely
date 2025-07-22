@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FileText, MoreVertical, Clock, Edit2, Trash2, Check, X } from 'lucide-react';
+import { FileText, MoreVertical, Clock, Edit2, Trash2, Check, X, MessageSquare } from 'lucide-react';
 
 // A helper function to format dates
 const formatDate = (dateString) => {
@@ -33,7 +33,7 @@ const HighlightedText = ({ text, highlight }) => {
   );
 };
 
-const EssayCard = ({ essay, onDelete, onEditTitle, highlight = '' }) => {
+const EssayCard = ({ essay, onDelete, onEditTitle, onChat, highlight = '' }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [newTitle, setNewTitle] = useState(essay.title);
@@ -114,6 +114,17 @@ const EssayCard = ({ essay, onDelete, onEditTitle, highlight = '' }) => {
             </button>
             {menuOpen && (
               <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-20">
+                {essay.has_feedback && (
+                  <button
+                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    onClick={() => {
+                      if (onChat) onChat();
+                      setMenuOpen(false);
+                    }}
+                  >
+                    <MessageSquare size={16} /> Chat about Feedback
+                  </button>
+                )}
                 <button
                   className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   onClick={() => { setEditing(true); setMenuOpen(false); }}
