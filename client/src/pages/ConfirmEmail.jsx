@@ -17,15 +17,21 @@ const ConfirmEmail = () => {
         return;
       }
       try {
-        await api.confirmEmail(token);
+        const response = await api.confirmEmail(token);
         setStatus('Email confirmed successfully!');
+        // If the API returns a token, log the user in automatically.
+        if (response.token) {
+          localStorage.setItem('token', response.token);
+          // Redirect to dashboard after a short delay to show the success message.
+          setTimeout(() => navigate('/dashboard'), 2000);
+        }
       } catch (err) {
         setStatus('Verification Failed');
         setError(err.message || 'The confirmation link may be invalid or expired.');
       }
     };
     confirm();
-  }, [token]);
+  }, [token, navigate]);
 
   const isSuccess = status.includes('successfully');
   const isError = status === 'Verification Failed' || status === 'Invalid confirmation link.';
@@ -128,14 +134,17 @@ const ConfirmEmail = () => {
                 <p className="text-emerald-600 text-sm">
                   Your email has been verified. You can now access all features of your account.
                 </p>
+                <p className="text-emerald-600 text-sm mt-2 font-semibold">
+                  Redirecting you to the dashboard...
+                </p>
               </div>
               
               <Button 
                 variant="accent" 
-                onClick={() => navigate('/login')} 
+                onClick={() => navigate('/dashboard')} 
                 className="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-medium py-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
               >
-                Continue to Login
+                Go to Dashboard
               </Button>
             </div>
           )}

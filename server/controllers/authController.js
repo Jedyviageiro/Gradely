@@ -49,7 +49,12 @@ const signup = async(req, res) => {
       if (!user.is_email_confirmed) {
         return res.status(403).json({ error: 'Email not confirmed' });
       }
-      const token = jwt.sign({ user_id: user.user_id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+      // Add first_name to the JWT payload so the frontend can display it.
+      const token = jwt.sign({
+        user_id: user.user_id,
+        email: user.email,
+        first_name: user.first_name
+      }, process.env.JWT_SECRET, { expiresIn: '1h' });
       
       // Create a user object to send to the client, excluding sensitive data
       const userForClient = {
@@ -75,9 +80,25 @@ const signup = async(req, res) => {
       if (!confirmation) {
         return res.status(400).json({ error: 'Invalid or expired token' });
       }
-      await User.confirmEmail(confirmation.user_id);
+      // Fetch the user details after confirming the email
+      const user = await User.confirmEmail(confirmation.user_id);
       await EmailConfirmation.deleteToken(token);
-      res.json({ message: 'Email confirmed successfully' });
+
+      if (!user) {
+        return res.status(404).json({ error: 'User not found after confirmation.' });
+      }
+
+      // Automatically log the user in by creating and sending a JWT
+      const authToken = jwt.sign({
+        user_id: user.user_id,
+        email: user.email,
+        first_name: user.first_name
+      }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+      res.json({
+        message: 'Email confirmed successfully',
+        token: authToken, // Send the newly created auth token to the client
+      });
     } catch (err) {
       res.status(500).json({ error: 'Server error' });
     }

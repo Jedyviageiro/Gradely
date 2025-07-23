@@ -1,6 +1,17 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const handleResponse = async (response) => {
+  // Centralized handling for unauthorized responses.
+  // If the token is expired or invalid, the server should return a 401.
+  if (response.status === 401) {
+    // Remove the invalid token from storage.
+    localStorage.removeItem('token');
+    // Redirect the user to the login page.
+    window.location.href = '/login';
+    // Throw an error to stop the current promise chain.
+    throw new Error('Your session has expired. Please log in again.');
+  }
+
   const contentType = response.headers.get('content-type');
 
   // If the server sends back JSON, parse it.

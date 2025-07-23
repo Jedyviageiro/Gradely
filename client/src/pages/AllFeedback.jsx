@@ -4,6 +4,7 @@ import { MessageCircle, Search } from 'lucide-react';
 import api from '../services/api';
 import FeedbackCard from '../components/feedback/FeedbackCard';
 import FeedbackModal from '../components/feedback/FeedbackModal';
+import FeedbackCardSkeleton from '../components/feedback/FeedbackCardSkeleton';
 import gradelyLogo from '../assets/gradely-images/gradely-logo.png';
 
 const AllFeedback = () => {
@@ -80,10 +81,9 @@ const AllFeedback = () => {
         </header>
         {/* Content */}
         <main className="flex-1 p-6">
-          {isLoading ? (
-            <div className="flex items-center justify-center text-gray-500 py-16">
-              <svg className="animate-spin mr-2" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-              Loading feedback...
+          {isLoading ? ( // Display skeleton loader while loading
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {[...Array(8)].map((_, i) => <FeedbackCardSkeleton key={i} />)}
             </div>
           ) : error ? (
             <div className="flex-1 flex flex-col items-center justify-center min-h-[400px] bg-red-50/80 rounded-xl border-2 border-dashed border-red-200/50 p-8 text-center">

@@ -1,5 +1,6 @@
 import { createContext, useState } from 'react';
 import PropTypes from 'prop-types';
+import { jwtDecode } from 'jwt-decode';
 
 const AuthContext = createContext();
 
@@ -18,9 +19,15 @@ const AuthProvider = ({ children }) => {
   });
   const [token, setToken] = useState(() => localStorage.getItem('token'));
 
-  const login = (newToken, userData) => {
+  const login = (newToken) => {
+    // Decode the token to get user data
+    const userData = jwtDecode(newToken);
+
+    // Store the token and user data
     localStorage.setItem('token', newToken);
     localStorage.setItem('user', JSON.stringify(userData));
+
+    // Update the state
     setToken(newToken);
     setUser(userData);
   };

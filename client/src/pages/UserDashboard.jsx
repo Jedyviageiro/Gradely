@@ -15,21 +15,27 @@ import EssayCard from '../components/essay/EssayCard';
 import EssayListItem from '../components/essay/EssayListItem';
 import Modal from '../components/ui/Modal';
 import WriteEssayForm from '../components/essay/WriteEssayForm';
+import EssayCardSkeleton from '../components/essay/EssayCardSkeleton';
+import EssayListItemSkeleton from '../components/essay/EssayListItemSkeleton';
 import gradelyLogo from '../assets/gradely-images/gradely-logo.png';
 import { useChatModal } from '../hooks/useChatModal';
+import { jwtDecode } from 'jwt-decode';
 
 const filterTabs = ['All Essays', 'Recent', 'Needs Review'];
 
-const UserDashboard = () => {
+const UserDashboard = ({
+  essays,
+  fetchEssays,
+  essaysLoading,
+  essaysError,
+}) => {
   const [activeTab, setActiveTab] = useState('Recent');
   const [viewMode, setViewMode] = useState('grid');
-  const [essays, setEssays] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [writeModalOpen, setWriteModalOpen] = useState(false);
   const [submittingEssay, setSubmittingEssay] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [userName, setUserName] = useState('');
   const { openChat } = useChatModal();
 
   const navigate = useNavigate();
@@ -41,66 +47,35 @@ const UserDashboard = () => {
     navigate('/login');
   }, [navigate]);
 
-  const fetchEssays = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        logout();
-        return;
-      }
-      const data = await api.getUserEssays(token);
-      setEssays(data);
-    } catch (err) {
-      setError(err.message || "Couldn't load your essays.");
-      if (err.message.includes('401') || err.message.includes('Unauthorized')) {
-        logout();
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  }, [logout]);
-
   const handleDeleteEssay = useCallback(
     async (essayId) => {
-      const originalEssays = [...essays];
-      setEssays((prev) => prev.filter((e) => e.essay_id !== essayId));
-
       try {
         const token = localStorage.getItem('token');
         await api.deleteEssay(token, essayId);
+        fetchEssays(); // Refetch to update the list
       } catch (err) {
-        setError(err.message || 'Could not delete the essay.');
-        setEssays(originalEssays);
+        alert(err.message || 'Could not delete the essay.');
+        // Refetch to revert UI to the correct state from the server
+        fetchEssays();
       }
     },
-    [essays]
+    [fetchEssays] // fetchEssays is now from props
   );
 
   const handleUpdateEssay = useCallback(
     async (essayId, newTitle) => {
-      const originalEssays = [...essays];
-      setEssays((prev) =>
-        prev.map((essay) =>
-          essay.essay_id === essayId ? { ...essay, title: newTitle } : essay
-        )
-      );
-
       try {
         const token = localStorage.getItem('token');
         await api.updateEssayTitle(token, essayId, newTitle);
+        fetchEssays(); // Refetch to update the list
       } catch (err) {
-        setError(err.message || 'Could not update the essay title.');
-        setEssays(originalEssays);
+        alert(err.message || 'Could not update the essay title.');
+        // Refetch to revert UI to the correct state from the server
+        fetchEssays();
       }
     },
-    [essays]
+    [fetchEssays]
   );
-
-  useEffect(() => {
-    fetchEssays();
-  }, [fetchEssays]);
 
   useEffect(() => {
     const activeTabIndex = filterTabs.findIndex((tab) => tab === activeTab);
@@ -112,6 +87,28 @@ const UserDashboard = () => {
       });
     }
   }, [activeTab]);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        console.log('Decoded JWT token:', decoded); // This is great for debugging!
+        // Try different possible property names for first name
+        const firstName = decoded.first_name || decoded.firstName || decoded.name || decoded.username;
+        if (firstName) {
+          setUserName(firstName);
+        } else {
+          // Add a warning if the name isn't in the token.
+          console.warn("User's first name not found in JWT token payload.", decoded);
+          setUserName('User'); // Provide a fallback name.
+        }
+      } catch (e) {
+        console.error('Invalid token:', e);
+        logout();
+      }
+    }
+  }, [logout]);
 
   const handleUploadSuccess = () => {
     setUploadModalOpen(false);
@@ -191,6 +188,18 @@ const UserDashboard = () => {
 
       {/* Content */}
       <main className="flex-1 p-6">
+        {/* Welcome Message - Always show above tabs */}
+        <div className="mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
+            Welcome Back{userName ? `, ${userName}` : ''}!
+          </h1>
+          <p className="text-md text-gray-500 mt-1">
+            {!essaysLoading && essays && essays.length > 0 
+              ? "Here are your essays."
+              : "Ready to start grading your essays?"}
+          </p>
+        </div>
+
         {/* Filter Tabs */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex border-b border-gray-200 relative">
@@ -198,7 +207,7 @@ const UserDashboard = () => {
               <button
                 ref={(el) => (tabRefs.current[index] = el)}
                 key={tab}
-                className={`px-4 py-2 text-sm font-medium transition-colors ${
+                className={`px-4 py-2 text-sm font-medium transition-colors rounded-full ${
                   activeTab === tab
                     ? 'text-blue-600'
                     : 'text-gray-500 hover:text-gray-700'
@@ -214,9 +223,9 @@ const UserDashboard = () => {
             />
           </div>
           {/* View Mode Toggle */}
-          <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
+          <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-full">
             <button
-              className={`p-2 rounded transition-colors ${
+              className={`p-2 rounded-full transition-colors ${
                 viewMode === 'grid' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'
               }`}
               onClick={() => setViewMode('grid')}
@@ -224,7 +233,7 @@ const UserDashboard = () => {
               <Grid size={16} className="text-gray-600" />
             </button>
             <button
-              className={`p-2 rounded transition-colors ${
+              className={`p-2 rounded-full transition-colors ${
                 viewMode === 'list' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'
               }`}
               onClick={() => setViewMode('list')}
@@ -235,18 +244,24 @@ const UserDashboard = () => {
         </div>
 
         {/* Essay Content */}
-        {isLoading ? (
-          <div className="flex items-center justify-center text-gray-500">
-            Loading essays...
-          </div>
-        ) : error ? (
+        {essaysLoading ? (
+          viewMode === 'grid' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {[...Array(8)].map((_, i) => <EssayCardSkeleton key={i} />)}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {[...Array(5)].map((_, i) => <EssayListItemSkeleton key={i} />)}
+            </div>
+          )
+        ) : essaysError ? (
           <div className="flex flex-col items-center justify-center min-h-[400px] bg-red-50 rounded-xl border-2 border-dashed border-red-200 p-8 text-center">
             <h3 className="text-lg font-medium text-red-800 mb-3">
               Something went wrong
             </h3>
-            <p className="text-red-600">{error}</p>
+            <p className="text-red-600">{essaysError}</p>
           </div>
-        ) : essays.length === 0 ? (
+        ) : !essays || essays.length === 0 ? (
           <div className="flex flex-col items-center justify-center min-h-[400px] bg-white rounded-xl border-2 border-dashed border-gray-300 p-8">
             <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-6">
               <FileText size={20} className="text-gray-400" />
@@ -258,7 +273,7 @@ const UserDashboard = () => {
               Get started by uploading your first essay.
             </p>
             <button
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full font-medium transition-colors"
               onClick={() => setUploadModalOpen(true)}
             >
               <Upload size={16} />

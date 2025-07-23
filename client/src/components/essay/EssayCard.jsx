@@ -52,13 +52,11 @@ const EssayCard = ({ essay, onDelete, onEditTitle, onChat, highlight = '' }) => 
     setLoading(true);
     setError('');
     try {
-      const token = localStorage.getItem('token');
-      await import('../../services/api').then(api =>
-        api.default.updateEssayTitle(token, essay.essay_id, newTitle.trim())
-      );
+      // The onEditTitle prop is a handler passed from the parent (UserDashboard)
+      // which will perform the API call and refetch the essay list.
+      if (onEditTitle) await onEditTitle(newTitle.trim());
       setEditing(false);
       setMenuOpen(false);
-      if (onEditTitle) onEditTitle(newTitle.trim());
     } catch (err) {
       setError(err.message || 'Failed to update title');
     } finally {
@@ -150,14 +148,14 @@ const EssayCard = ({ essay, onDelete, onEditTitle, onChat, highlight = '' }) => 
         {editing && (
           <div className="flex gap-2 mt-2">
             <button
-              className="flex items-center gap-1 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs"
+              className="flex items-center gap-1 px-3 py-1 bg-blue-600 text-white rounded-full hover:bg-blue-700 text-xs"
               onClick={handleEdit}
               disabled={loading}
             >
               <Check size={14} /> Save
             </button>
             <button
-              className="flex items-center gap-1 px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-xs"
+              className="flex items-center gap-1 px-3 py-1 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 text-xs"
               onClick={() => { setEditing(false); setNewTitle(essay.title); }}
               disabled={loading}
             >

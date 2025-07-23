@@ -176,7 +176,7 @@ const UploadEssayForm = ({ onClose, onUploadSuccess }) => {
         )}
         <button
           type="submit"
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition disabled:opacity-60 flex items-center justify-center gap-2"
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-full transition disabled:opacity-60 flex items-center justify-center gap-2"
           disabled={!title || !file || submitting}
         >
           {submitting ? <Loader2 className="animate-spin" size={18} /> : <UploadCloud size={18} />}
