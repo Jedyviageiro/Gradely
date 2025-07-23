@@ -1,9 +1,25 @@
 import { useState, useMemo } from 'react';
-import { X, Loader2, Wand2 } from 'lucide-react';
+import { X, Loader2, Wand2, CheckCircle } from 'lucide-react';
 import { createEditor } from 'slate';
 import { Slate, Editable, withReact } from 'slate-react';
 import './poppins.css';
 import api from '../../services/api';
+
+const tonalityOptions = ['Admission', 'Academic', 'Creative', 'Professional'];
+
+const TonalityButton = ({ option, selected, onClick }) => (
+  <button
+    type="button"
+    onClick={() => onClick(option)}
+    className={`relative z-10 flex-1 px-3 py-2 text-xs font-medium transition-all duration-300 ease-out focus:outline-none rounded-full ${
+      selected
+        ? 'text-white'
+        : 'text-gray-700 hover:text-gray-900'
+    }`}
+  >
+    {option}
+  </button>
+);
 
 // Default valid Slate value - must be defined outside component
 const INITIAL_VALUE = [
@@ -32,6 +48,7 @@ const textToSlate = (text) => {
 
 const WriteEssayForm = ({ onClose, onSubmit, submitting, initialData }) => {
   const [title, setTitle] = useState(initialData?.title || '');
+  const [tonality, setTonality] = useState(initialData?.tonality || 'Academic');
   
   // Create editor outside of any conditional logic
   const editor = useMemo(() => withReact(createEditor()), []);
@@ -70,7 +87,7 @@ const WriteEssayForm = ({ onClose, onSubmit, submitting, initialData }) => {
       return;
     }
     setError('');
-    if (onSubmit) onSubmit({ title: title.trim(), content: plainTextContent.trim() });
+    if (onSubmit) onSubmit({ title: title.trim(), content: plainTextContent.trim(), tonality });
   };
 
   const handleGrammarCheck = async () => {
@@ -113,29 +130,29 @@ const WriteEssayForm = ({ onClose, onSubmit, submitting, initialData }) => {
   };
 
   return (
-    <div className="poppins-font w-full max-w-5xl mx-auto bg-white rounded-2xl shadow-xl px-12 py-6 relative border border-gray-100">
+    <div className="poppins-font w-full max-w-6xl mx-auto bg-white rounded-2xl shadow-xl px-8 py-5 relative border border-gray-100">
       <button
-        className="absolute top-6 right-6 p-2.5 rounded-full bg-gray-50 hover:bg-red-50 text-gray-400 hover:text-red-500 transition-all duration-200"
+        className="absolute top-4 right-4 p-2 rounded-full bg-gray-50 hover:bg-red-50 text-gray-400 hover:text-red-500 transition-all duration-200"
         onClick={onClose}
         aria-label="Close"
         type="button"
       >
-        <X size={22} />
+        <X size={20} />
       </button>
       
-      <div className="text-center mb-6">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">Write a New Essay</h2>
-        <p className="text-gray-500 text-sm">Create and submit your essay. Use the grammar corrector to improve your writing.</p>
+      <div className="text-center mb-5">
+        <h2 className="text-2xl font-bold text-gray-900 mb-1">Write a New Essay</h2>
+        <p className="text-gray-500 text-xs">Create and submit your essay. Use the grammar corrector to improve your writing.</p>
       </div>
       
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-3">
-          <label className="block text-sm font-semibold text-gray-700">
+      <form onSubmit={handleSubmit} className="space-y-3">
+        <div className="space-y-2">
+          <label className="block text-xs font-semibold text-gray-700">
             Essay Title <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
-            className="w-full border-2 border-gray-200 rounded-xl px-6 py-4 focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all duration-200 bg-gray-50/50 text-gray-900 font-medium text-lg placeholder:text-gray-400"
+            className="w-full border-2 border-gray-200 rounded-full px-4 py-3 focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all duration-200 bg-gray-50/50 text-gray-900 font-medium text-sm placeholder:text-gray-400"
             placeholder="Enter your essay title here..."
             value={title}
             onChange={e => setTitle(e.target.value)}
@@ -144,9 +161,28 @@ const WriteEssayForm = ({ onClose, onSubmit, submitting, initialData }) => {
           />
         </div>
         
-        <div className="space-y-3">
+        <div className="space-y-2">
+          <label className="block text-xs font-semibold text-gray-700">
+            Target Tonality <span className="text-red-500">*</span>
+          </label>
+          <div className="relative flex gap-2 flex-wrap bg-gray-100/50 p-1 rounded-full">
+            {/* Sliding background indicator */}
+            <div 
+              className="absolute top-1 h-[calc(100%-8px)] bg-blue-600 rounded-full transition-all duration-300 ease-out shadow-sm"
+              style={{
+                left: `${0.9 + tonalityOptions.indexOf(tonality) * (100 / tonalityOptions.length)}%`,
+                width: `${100 / tonalityOptions.length - 1.5}%`,
+              }}
+            />
+            {tonalityOptions.map((option) => (
+              <TonalityButton key={option} option={option} selected={tonality === option} onClick={setTonality} />
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-2">
           <div className="flex justify-between items-center">
-            <label className="block text-sm font-semibold text-gray-700">
+            <label className="block text-xs font-semibold text-gray-700">
               Essay Content <span className="text-red-500">*</span>
             </label>
             <div className="flex items-center gap-2">
@@ -154,15 +190,15 @@ const WriteEssayForm = ({ onClose, onSubmit, submitting, initialData }) => {
                 type="button"
                 onClick={handleGrammarCheck}
                 disabled={isCorrecting || submitting}
-                className="flex items-center gap-2 bg-purple-100 text-purple-700 hover:bg-purple-200 px-3 py-1.5 rounded-full text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-1 bg-purple-100 text-purple-700 hover:bg-purple-200 px-2 py-1 rounded-full text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isCorrecting ? <Loader2 className="animate-spin" size={14} /> : <Wand2 size={14} />}
+                {isCorrecting ? <Loader2 className="animate-spin" size={12} /> : <Wand2 size={12} />}
                 {isCorrecting ? 'Correcting...' : 'Correct Grammar'}
               </button>
             </div>
           </div>
           
-          <div className="w-full h-[240px] border-2 border-gray-200 rounded-xl px-6 py-5 focus-within:ring-4 focus-within:ring-blue-100 focus-within:border-blue-500 outline-none transition-all duration-200 bg-gray-50/50 text-gray-900 font-normal text-base resize-none overflow-y-auto custom-scrollbar">
+          <div className="w-full h-[180px] border-2 border-gray-200 rounded-lg px-4 py-3 focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-500 outline-none transition-all duration-200 bg-gray-50/50 text-gray-900 font-normal text-sm resize-none overflow-y-auto custom-scrollbar">
             <Slate 
               key={editorKey}
               editor={editor} 
@@ -175,25 +211,25 @@ const WriteEssayForm = ({ onClose, onSubmit, submitting, initialData }) => {
                 className="w-full outline-none tracking-wide"
                 style={{
                   wordSpacing: '0.15em',
-                  lineHeight: '1.8'
+                  lineHeight: '1.6'
                 }}
               />
             </Slate>
           </div>
           
-          {correctionError && <p className="text-red-500 text-xs mt-2">{correctionError}</p>}
+          {correctionError && <p className="text-red-500 text-xs mt-1">{correctionError}</p>}
         </div>
         
         {error && (
-          <div className="text-sm text-red-600 bg-red-50 px-4 py-3 rounded-lg border border-red-200">
+          <div className="text-xs text-red-600 bg-red-50 px-3 py-2 rounded-full border border-red-200">
             {error}
           </div>
         )}
         
-        <div className="flex gap-4 justify-center pt-4 border-t border-gray-100">
+        <div className="flex gap-3 justify-center pt-3 border-t border-gray-100">
           <button
             type="button"
-            className="px-8 py-3 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 font-semibold transition-all duration-200 text-base"
+            className="px-6 py-2.5 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 font-semibold transition-all duration-200 text-sm"
             onClick={onClose}
             disabled={submitting}
           >
@@ -201,10 +237,10 @@ const WriteEssayForm = ({ onClose, onSubmit, submitting, initialData }) => {
           </button>
           <button
             type="submit"
-            className="px-10 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-all duration-200 flex items-center gap-3 shadow-lg hover:shadow-xl disabled:opacity-60 disabled:hover:bg-blue-600 text-base"
+            className="px-8 py-2.5 rounded-full bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl disabled:opacity-60 disabled:hover:bg-blue-600 text-sm"
             disabled={submitting || isCorrecting}
           >
-            {submitting ? <Loader2 className="animate-spin" size={20} /> : null}
+            {submitting ? <Loader2 className="animate-spin" size={16} /> : null}
             {submitting ? 'Submitting Essay...' : 'Submit Essay'}
           </button>
         </div>

@@ -74,7 +74,8 @@ const generateFeedback = async (req, res) => {
     // Replace placeholders with essay content and similarity context
     const finalPrompt = prompt
       .replace('{{SIMILARITY_CONTEXT}}', similarityContext)
-      .replace('{{ESSAY_CONTENT}}', essay.content);
+      .replace('{{ESSAY_CONTENT}}', essay.content)
+      .replace('{{ESSAY_TONALITY}}', essay.tonality);
 
     // Call Gemini API
     const result = await model.generateContent(finalPrompt);

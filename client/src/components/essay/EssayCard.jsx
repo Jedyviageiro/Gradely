@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FileText, MoreVertical, Clock, Edit2, Trash2, Check, X, MessageSquare } from 'lucide-react';
+import { FileText, MoreVertical, Clock, Edit2, Trash2, Check, X, MessageSquare, Tag } from 'lucide-react';
 
 // A helper function to format dates
 const formatDate = (dateString) => {
@@ -171,6 +171,12 @@ const EssayCard = ({ essay, onDelete, onEditTitle, onChat, highlight = '' }) => 
           <Clock size={14} />
           <span>Uploaded: {formatDate(essay.uploaded_at)}</span>
         </div>
+        {essay.tonality && (
+          <div className="flex items-center gap-1.5 bg-gray-200 px-2 py-0.5 rounded-full">
+            <Tag size={12} />
+            <span>{essay.tonality}</span>
+          </div>
+        )}
         {/* Dynamic status badge */}
         <span className={`px-2 py-0.5 rounded-full font-medium ${essay.has_feedback ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
           {essay.has_feedback ? 'Reviewed' : 'Pending'}

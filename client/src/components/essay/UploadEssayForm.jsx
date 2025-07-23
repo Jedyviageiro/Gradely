@@ -1,11 +1,28 @@
 import { useRef, useState } from 'react';
-import { UploadCloud, FileText, X, Loader2 } from 'lucide-react';
+import { UploadCloud, FileText, X, Loader2, CheckCircle } from 'lucide-react';
 import api from '../../services/api';
+
+const tonalityOptions = ['Admission', 'Academic', 'Creative', 'Professional'];
+
+const TonalityButton = ({ option, selected, onClick }) => (
+  <button
+    type="button"
+    onClick={() => onClick(option)}
+    className={`relative z-10 flex-1 px-3 py-2 text-xs font-medium transition-all duration-300 ease-out focus:outline-none rounded-full ${
+      selected
+        ? 'text-white'
+        : 'text-gray-700 hover:text-gray-900'
+    }`}
+  >
+    {option}
+  </button>
+);
 
 const UploadEssayForm = ({ onClose, onUploadSuccess }) => {
   const [title, setTitle] = useState('');
   const [file, setFile] = useState(null);
   const [dragActive, setDragActive] = useState(false);
+  const [tonality, setTonality] = useState('Academic'); // Default tonality
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const fileInputRef = useRef();
@@ -63,7 +80,7 @@ const UploadEssayForm = ({ onClose, onUploadSuccess }) => {
         return;
       }
 
-      await api.uploadEssay(token, title, file);
+      await api.uploadEssay(token, title, file, tonality);
 
       // On success, call the callback from the parent to refresh the list and close the modal
       if (onUploadSuccess) onUploadSuccess();
@@ -78,7 +95,7 @@ const UploadEssayForm = ({ onClose, onUploadSuccess }) => {
     <div className="max-w-lg w-full mx-auto bg-white rounded-2xl shadow-2xl p-8 relative">
       {onClose && (
         <button
-          className="absolute top-4 right-4 p-2 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition"
+          className="absolute top-4 right-4 p-2 rounded-full bg-gray-50 hover:bg-red-50 text-gray-400 hover:text-red-500 transition-all duration-200"
           onClick={onClose}
           type="button"
         >
@@ -101,6 +118,22 @@ const UploadEssayForm = ({ onClose, onUploadSuccess }) => {
             onChange={e => setTitle(e.target.value)}
             required
           />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Target Tonality <span className="text-red-500">*</span></label>
+          <div className="relative flex gap-2 flex-wrap bg-gray-100/50 p-1 rounded-full">
+            {/* Sliding background indicator */}
+            <div 
+              className="absolute top-1 h-[calc(100%-8px)] bg-blue-600 rounded-full transition-all duration-300 ease-out shadow-sm"
+              style={{
+                left: `${0.9 + tonalityOptions.indexOf(tonality) * (100 / tonalityOptions.length)}%`,
+                width: `${100 / tonalityOptions.length - 1.5}%`,
+              }}
+            />
+            {tonalityOptions.map((option) => (
+              <TonalityButton key={option} option={option} selected={tonality === option} onClick={setTonality} />
+            ))}
+          </div>
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Essay File <span className="text-red-500">*</span></label>
@@ -154,4 +187,4 @@ const UploadEssayForm = ({ onClose, onUploadSuccess }) => {
   );
 };
 
-export default UploadEssayForm; 
+export default UploadEssayForm;

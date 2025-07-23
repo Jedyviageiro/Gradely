@@ -74,9 +74,10 @@ const api = {
     return handleResponse(response);
   },
 
-  uploadEssay: async (token, title, file) => {
+  uploadEssay: async (token, title, file, tonality) => {
     const formData = new FormData();
     formData.append('title', title);
+    formData.append('tonality', tonality);
     formData.append('essay', file);
     const response = await fetch(`${API_URL}/essays`, {
       method: 'POST',
@@ -86,14 +87,14 @@ const api = {
     return handleResponse(response);
   },
 
-  createEssayFromText: async (token, title, content) => {
+  createEssayFromText: async (token, title, content, tonality) => {
     const response = await fetch(`${API_URL}/essays/write`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ title, content }),
+      body: JSON.stringify({ title, content, tonality }),
     });
     return handleResponse(response);
   },

@@ -1,10 +1,10 @@
 const pool = require('../config/db');
 
-const createEssay = async(user_id, title, content) => {
+const createEssay = async(user_id, title, content, tonality) => {
     try {
         const result = await pool.query(
-            'INSERT INTO essays (user_id, title, content) VALUES ($1, $2, $3) RETURNING *',
-            [user_id, title, content]
+            'INSERT INTO essays (user_id, title, content, tonality) VALUES ($1, $2, $3, $4) RETURNING *',
+            [user_id, title, content, tonality]
         );
         return result.rows[0];
     } catch (error) {
@@ -21,12 +21,13 @@ const findEssayByUser = async(user_id) => {
                 e.user_id,
                 e.title,
                 e.content,
+                e.tonality,
                 e.uploaded_at,
                 COUNT(f.feedback_id) > 0 as has_feedback
             FROM essays e
             LEFT JOIN feedback f ON e.essay_id = f.essay_id
             WHERE e.user_id = $1
-            GROUP BY e.essay_id
+            GROUP BY e.essay_id, e.tonality
             ORDER BY e.uploaded_at DESC`,
             [user_id]
         );
@@ -40,7 +41,7 @@ const findEssayByUser = async(user_id) => {
 const findEssayById = async(essay_id) => {
     try {
         const result = await pool.query(
-            'SELECT * FROM essays WHERE essay_id = $1',
+            'SELECT essay_id, user_id, title, content, tonality, uploaded_at FROM essays WHERE essay_id = $1',
             [essay_id]
         );
         return result.rows[0];

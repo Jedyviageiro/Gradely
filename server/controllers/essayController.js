@@ -12,10 +12,14 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const uploadEssay = async (req, res) => {
   try {
     const { user_id } = req.user;
-    const { title } = req.body;
+    const { title, tonality } = req.body;
 
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
+    }
+    // Validate tonality
+    if (!tonality) {
+      return res.status(400).json({ error: 'Tonality is required.' });
     }
 
     // Validate file size (multer limit is 5MB, but confirm here)
@@ -84,7 +88,7 @@ const uploadEssay = async (req, res) => {
     // Sanitize content to remove null bytes
     const sanitizedContent = content.replace(/\0/g, '');
 
-    const essay = await Essay.createEssay(user_id, title, sanitizedContent);
+    const essay = await Essay.createEssay(user_id, title, sanitizedContent, tonality);
 
     // Clean up uploaded file
     await fs.unlink(req.file.path).catch(unlinkErr =>
@@ -112,16 +116,16 @@ const uploadEssay = async (req, res) => {
 const createEssayFromText = async (req, res) => {
   try {
     const { user_id } = req.user;
-    const { title, content } = req.body;
+    const { title, content, tonality } = req.body;
 
-    if (!title || !content || !title.trim() || !content.trim()) {
-      return res.status(400).json({ error: 'Title and content are required.' });
+    if (!title || !content || !tonality || !title.trim() || !content.trim()) {
+      return res.status(400).json({ error: 'Title, content, and tonality are required.' });
     }
 
     // Sanitize content to remove null bytes, just in case
     const sanitizedContent = content.replace(/\0/g, '');
 
-    const essay = await Essay.createEssay(user_id, title.trim(), sanitizedContent);
+    const essay = await Essay.createEssay(user_id, title.trim(), sanitizedContent, tonality);
 
     res.status(201).json(essay);
   } catch (err) {
@@ -337,6 +341,7 @@ const chatWithEssay = async (req, res) => {
     // 3. Construct the final prompt
     const finalPrompt = promptTemplate
       .replace('{{ESSAY_CONTENT}}', essay.content)
+      .replace('{{ESSAY_TONALITY}}', essay.tonality)
       .replace('{{ESSAY_FEEDBACK}}', feedbackText)
       .replace('{{USER_QUESTION}}', question);
 

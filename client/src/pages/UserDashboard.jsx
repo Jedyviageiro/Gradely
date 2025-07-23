@@ -311,11 +311,11 @@ const UserDashboard = () => {
         <Modal open={writeModalOpen} onClose={() => setWriteModalOpen(false)}>
           <WriteEssayForm
             onClose={() => setWriteModalOpen(false)}
-            onSubmit={async ({ title, content }) => {
+            onSubmit={async ({ title, content, tonality }) => {
               setSubmittingEssay(true);
               try {
                 const token = localStorage.getItem('token');
-                await api.createEssayFromText(token, title, content);
+                await api.createEssayFromText(token, title, content, tonality);
                 setWriteModalOpen(false);
                 fetchEssays();
               } catch (err) {
