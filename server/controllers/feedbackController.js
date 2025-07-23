@@ -108,7 +108,7 @@ const generateFeedback = async (req, res) => {
       isNaN(typoScore) ||
       typoScore < 1 || typoScore > 10 ||
       originalityScore < 1 || originalityScore > 10 ||
-      !feedbackData.analysis
+      !Array.isArray(feedbackData.feedback_text) // Ensure feedback_text is an array
     ) {
       return res.status(500).json({ error: 'Invalid AI response format', rawResponse: response });
     }

@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { FileText, Upload, MessageCircle, LogOut, Menu, Search, Grid, List, Wand2, Edit2, MessageSquare, X, Send, BookOpen, CheckCircle2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Search, Grid, List, CheckCircle2 } from 'lucide-react';
 import api from '../services/api';
 import GenerateFeedbackCard from '../components/essay/GenerateFeedbackCard';
 import Modal from '../components/ui/Modal';
+import gradelyLogo from '../assets/gradely-images/gradely-logo.png';
 
 
 const filterTabs = [
@@ -85,6 +87,15 @@ const GenerateFeedback = () => {
         {/* Header */}
         <header className="bg-white/80 backdrop-blur-xl border-b border-white/20 px-6 py-4 sticky top-0 z-30">
           <div className="flex items-center justify-between">
+
+            <Link to="/dashboard" className="flex items-center gap-3">
+            <img src={gradelyLogo} alt="Gradely Logo" className="w-8 h-8 object-contain" />
+            <span className="text-2xl font-normal text-gray-700 hidden sm:block">
+              Gradely
+            </span>
+          </Link>
+
+
             <div className="flex-1"></div>
             <div className="flex items-center gap-4">
               <div className="relative">
@@ -92,7 +103,7 @@ const GenerateFeedback = () => {
                 <input
                   type="text"
                   placeholder="Search essays..."
-                  className="pl-10 pr-4 py-2 w-80 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                  className="pl-10 pr-4 py-2 w-80 border border-gray-200 bg-gray-100/50 rounded-full focus:ring-2 focus:ring-blue-200 focus:border-transparent outline-none transition-all"
                 />
               </div>
             </div>

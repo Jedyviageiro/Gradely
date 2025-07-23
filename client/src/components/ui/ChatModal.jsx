@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, MessageSquare, Send } from 'lucide-react';
+import { X, MessageSquare, Send, ChevronDown, Check } from 'lucide-react';
 import gradelyLogo from '../../assets/gradely-images/gradely-logo.png';
 import { useChatModal } from "../../hooks/useChatModal.jsx";
 
@@ -20,7 +20,9 @@ export default function ChatModal() {
 
   // Manage input state locally within this component
   const [input, setInput] = useState('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const chatContainerRef = useRef(null);
+  const dropdownRef = useRef(null);
 
   // Effect to scroll to the bottom of the chat on new messages
   useEffect(() => {
@@ -28,6 +30,17 @@ export default function ChatModal() {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
   }, [messages, isLoading]);
+
+  // Effect to close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // The submit handler now calls the context's function, which is connected to the backend
   const handleChatSubmit = (e) => {
@@ -63,7 +76,7 @@ export default function ChatModal() {
 
         {/* Essay selection */}
         {!selectedEssay ? (
-          <div className="flex-1 flex flex-col items-center justify-center px-10 py-16 bg-gradient-to-b from-gray-50/50 to-white">
+          <div className="flex-1 flex flex-col items-center justify-center px-10 py-8 bg-gradient-to-b from-gray-50/50 to-white overflow-y-auto custom-scrollbar">
             <div className="bg-blue-100 p-4 rounded-2xl mb-6">
               <MessageSquare size={48} className="text-blue-600" />
             </div>
@@ -71,17 +84,39 @@ export default function ChatModal() {
             <p className="text-gray-500 text-center mb-8 max-w-md leading-relaxed">
               Choose a reviewed essay to ask Gradely questions about your feedback and get personalized insights.
             </p>
-            <div className="w-full max-w-sm space-y-4">
-              <select
-                className="w-full border-2 border-gray-200 rounded-xl px-5 py-4 text-base focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all duration-200 bg-white text-gray-900 font-medium"
-                value={selectedEssay?.essay_id || ''}
-                onChange={e => selectEssay(e.target.value)}
+            <div ref={dropdownRef} className="relative w-full max-w-sm">
+              <button
+                type="button"
+                onClick={() => setIsDropdownOpen(prev => !prev)}
+                className="w-full flex items-center justify-between border-2 border-gray-200 rounded-xl px-5 py-4 text-base focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all duration-200 bg-white text-gray-900 font-medium"
               >
-                <option value="" disabled>Select a reviewed essay...</option>
-                {reviewedEssays.map(e => (
-                  <option key={e.essay_id} value={e.essay_id}>{e.title}</option>
-                ))}
-              </select>
+                <span className="truncate pr-2">
+                  {selectedEssay ? selectedEssay.title : 'Select a reviewed essay...'}
+                </span>
+                <ChevronDown size={20} className={`text-gray-500 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {isDropdownOpen && (
+                <div className="absolute z-10 top-full mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+                  <ul className="max-h-60 overflow-y-auto custom-scrollbar">
+                    {reviewedEssays.map(e => (
+                      <li key={e.essay_id}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            selectEssay(String(e.essay_id));
+                            setIsDropdownOpen(false);
+                          }}
+                          className="w-full text-left px-5 py-3 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 flex items-center justify-between transition-colors"
+                        >
+                          <span className="truncate pr-4">{e.title}</span>
+                          {selectedEssay?.essay_id === e.essay_id && <Check size={16} className="text-blue-600 flex-shrink-0" />}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           </div>
         ) : (

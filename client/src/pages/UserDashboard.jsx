@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   FileText,
   Upload,
@@ -15,6 +15,7 @@ import EssayCard from '../components/essay/EssayCard';
 import EssayListItem from '../components/essay/EssayListItem';
 import Modal from '../components/ui/Modal';
 import WriteEssayForm from '../components/essay/WriteEssayForm';
+import gradelyLogo from '../assets/gradely-images/gradely-logo.png';
 import { useChatModal } from '../hooks/useChatModal';
 
 const filterTabs = ['All Essays', 'Recent', 'Needs Review'];
@@ -148,9 +149,14 @@ const UserDashboard = () => {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-xl border-b border-gray-200/80 px-6 py-4 sticky top-0 z-30 w-full">
+      <header className="bg-white/80 backdrop-blur-xl px-6 py-4 sticky top-0 z-30 w-full">
         <div className="flex items-center justify-between">
-          <div className="flex-1" />
+          <Link to="/dashboard" className="flex items-center gap-3">
+            <img src={gradelyLogo} alt="Gradely Logo" className="w-8 h-8 object-contain" />
+            <span className="text-2xl font-normal text-gray-700 hidden sm:block">
+              Gradely
+            </span>
+          </Link>
           <div className="flex items-center gap-2 md:gap-4">
             <div className="relative">
               <Search
@@ -162,18 +168,18 @@ const UserDashboard = () => {
                 placeholder="Search essays..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 w-48 md:w-80 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                className="pl-10 pr-4 py-2 w-48 md:w-80 border border-gray-200 bg-gray-100/50 rounded-full focus:ring-2 focus:ring-blue-200 focus:border-transparent outline-none transition-all"
               />
             </div>
             <button
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-3 md:px-4 py-2 rounded-lg font-medium transition-colors"
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-3 md:px-4 py-2 rounded-full font-medium transition-colors"
               onClick={() => setUploadModalOpen(true)}
             >
               <Upload size={16} />
               <span className="hidden md:inline">Upload</span>
             </button>
             <button
-              className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-3 md:px-4 py-2 rounded-lg font-medium transition-colors"
+              className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-3 md:px-4 py-2 rounded-full font-medium transition-colors"
               onClick={() => setWriteModalOpen(true)}
             >
               <Edit2 size={16} />

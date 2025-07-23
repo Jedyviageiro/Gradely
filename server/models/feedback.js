@@ -31,7 +31,7 @@ const findFeedbackByEssayId = async (essay_id) => {
     }
 
     const result = await pool.query(
-      'SELECT * FROM feedback WHERE essay_id = $1 ORDER BY created_at DESC',
+      'SELECT feedback_id, essay_id, feedback_text, originality_score, typo_score, created_at FROM feedback WHERE essay_id = $1 ORDER BY created_at DESC',
       [essay_id]
     );
     return result.rows;
@@ -49,9 +49,9 @@ const findFeedbackByUser = async (user_id) => {
 
     const result = await pool.query(
       `
-      SELECT f.*
+      SELECT f.*, e.title as essay_title, e.tonality as essay_tonality
       FROM feedback f
-      JOIN essays e ON f.essay_id = e.essay_id
+      INNER JOIN essays e ON f.essay_id = e.essay_id
       WHERE e.user_id = $1
       ORDER BY f.created_at DESC
       `,
