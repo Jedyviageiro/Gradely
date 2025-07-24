@@ -53,7 +53,9 @@ const signup = async(req, res) => {
       const token = jwt.sign({
         user_id: user.user_id,
         email: user.email,
-        first_name: user.first_name
+        first_name: user.first_name,
+        last_name: user.last_name,
+        profile_picture_url: user.profile_picture_url
       }, process.env.JWT_SECRET, { expiresIn: '1h' });
       
       // Create a user object to send to the client, excluding sensitive data
@@ -62,6 +64,7 @@ const signup = async(req, res) => {
         email: user.email,
         first_name: user.first_name,
         last_name: user.last_name,
+        profile_picture_url: user.profile_picture_url,
       };
 
       res.json({ token, user: userForClient });
@@ -92,7 +95,9 @@ const signup = async(req, res) => {
       const authToken = jwt.sign({
         user_id: user.user_id,
         email: user.email,
-        first_name: user.first_name
+        first_name: user.first_name,
+        last_name: user.last_name,
+        profile_picture_url: user.profile_picture_url
       }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
       res.json({

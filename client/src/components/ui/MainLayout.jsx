@@ -1,7 +1,8 @@
-import { useState, useRef, useMemo } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { FileText, BookOpen, Wand2, Edit2, MessageSquare, LogOut, Menu } from 'lucide-react';
+import { useState, useRef, useMemo, useEffect } from 'react';
+import { useNavigate, useLocation, NavLink } from 'react-router-dom';
+import { FileText, BookOpen, Wand2, MessageSquare, LogOut, Menu } from 'lucide-react';
 import { useChatModal } from '../../hooks/useChatModal.jsx';
+import { jwtDecode } from 'jwt-decode';
 
 const navItems = [
   { label: 'My Essays', icon: <FileText size={20} />, path: '/dashboard' },
@@ -14,6 +15,12 @@ export default function MainLayout({ children }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [user, setUser] = useState({
+    fullName: 'User',
+    email: '',
+    initial: 'U',
+    profilePictureUrl: '', // Add this to hold the profile picture URL
+  });
   const [sidebarActive, setSidebarActive] = useState(() => {
     const match = navItems.find(item => item.path && location.pathname.startsWith(item.path));
     return match ? match.label : 'My Essays';
@@ -21,6 +28,25 @@ export default function MainLayout({ children }) {
   const navItemRefs = useRef([]);
   const [indicatorStyle, setIndicatorStyle] = useState({});
   const { openChat } = useChatModal();
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        const fullName = `${decoded.first_name || ''} ${decoded.last_name || ''}`.trim();
+        const initial = (decoded.first_name || 'U').charAt(0).toUpperCase();
+        setUser({
+          fullName: fullName || 'User',
+          email: decoded.email || '',
+          initial: initial,
+          profilePictureUrl: decoded.profile_picture_url || '', // Fetch profile picture URL from token
+        });
+      } catch (e) {
+        console.error('Invalid token in MainLayout:', e);
+      }
+    }
+  }, [location.pathname]); // Re-decode token on navigation to reflect profile updates
 
   // Animate indicator
   useMemo(() => {
@@ -88,7 +114,38 @@ export default function MainLayout({ children }) {
             ))}
           </div>
         </nav>
-        {/* Logout */}
+
+        {/* Profile Section */}
+        <div className="p-2 border-t border-gray-200">
+          <NavLink
+            to="/profile"
+            className={({ isActive }) => `w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-150 ease-out group relative ${
+              isActive
+                ? 'bg-gradient-to-r from-blue-50 to-blue-100/50'
+                : 'hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100/50'
+            }`}
+            title={!sidebarOpen ? `${user.fullName}\n${user.email}` : ''}
+          >
+            {/* Profile Image */}
+            <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0">
+              {user.profilePictureUrl ? (
+                <img
+                  src={user.profilePictureUrl} 
+                  alt="Profile"
+                  className="w-full h-full object-cover rounded-full"
+                />
+              ) : (
+                <span>{user.initial}</span>
+              )}
+            </div>
+            {sidebarOpen && (
+              <div className="overflow-hidden">
+                <div className="font-semibold text-gray-800 truncate">{user.fullName}</div>
+                <div className="text-xs text-gray-500 truncate">{user.email}</div>
+              </div>
+            )}
+          </NavLink>
+        </div>
         <div className="p-2 border-t border-gray-200">
           <button
             className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100/50 rounded-lg transition-all duration-150 hover:scale-[1.02] active:scale-[0.98] group"
@@ -106,4 +163,4 @@ export default function MainLayout({ children }) {
       </div>
     </div>
   );
-} 
+}

@@ -10,6 +10,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute.jsx';
 import GenerateFeedback from './pages/GenerateFeedback.jsx';
 import LandingPage from './pages/LandingPage.jsx';
 import AllFeedback from './pages/AllFeedback.jsx';
+import ManageProfile from './pages/ManageProfile.jsx';
 import ChatModalProvider from './context/ChatModalContext.jsx';
 import ChatModal from './components/ui/ChatModal.jsx';
 import { useState, useEffect, useCallback } from 'react';
@@ -85,6 +86,16 @@ function App() {
                   <ProtectedRoute>
                     <MainLayout>
                       <AllFeedback essays={essays} fetchEssays={fetchEssays} essaysLoading={essaysLoading} essaysError={essaysError} />
+                    </MainLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <ManageProfile />
                     </MainLayout>
                   </ProtectedRoute>
                 }

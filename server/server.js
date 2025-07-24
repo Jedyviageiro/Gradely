@@ -1,7 +1,9 @@
+// Load environment variables from .env file at the very beginning
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const routes = require('./routes/allRoutes');
-require('dotenv').config();
 
 const app = express();
 

@@ -61,10 +61,48 @@ const confirmEmail = async(user_id) => {
     }
 };
 
+const updateProfilePicture = async(userId, profilePictureUrl) => {
+  try {
+    const result = await pool.query(
+      'UPDATE users SET profile_picture_url = $1 WHERE user_id = $2 RETURNING user_id, email, first_name, last_name, profile_picture_url, is_email_confirmed',
+      [profilePictureUrl, userId]
+    );
+    
+    if (result.rows.length === 0) {
+      return null;
+    }
+    
+    return result.rows[0];
+  } catch (error) {
+    console.error('Error updating profile picture:', error);
+    throw error;
+  }
+}
+
+const updateProfile = async (userId, { first_name, last_name }) => {
+  try {
+    const result = await pool.query(
+      'UPDATE users SET first_name = $1, last_name = $2 WHERE user_id = $3 RETURNING user_id, email, first_name, last_name, profile_picture_url, is_email_confirmed',
+      [first_name, last_name, userId]
+    );
+    
+    if (result.rows.length === 0) {
+      return null;
+    }
+    
+    return result.rows[0];
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    throw error;
+  }
+};
+
 module.exports = {
     createUser,
     findByEmail,
     verifyPassword,
     updatePassword,
-    confirmEmail
+    confirmEmail,
+    updateProfile,
+    updateProfilePicture,
 };

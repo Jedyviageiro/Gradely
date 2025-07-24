@@ -19,6 +19,8 @@ services:
     restart: always
     environment:
       DATABASE_URL: postgres://postgres:postgres@db:5432/gradely
+    env_file:
+      - ./server/.env
     depends_on:
       - db
     ports:

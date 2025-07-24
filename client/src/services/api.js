@@ -205,6 +205,41 @@ const api = {
     });
     return handleResponse(response);
   },
+
+  getProfile: async (token) => {
+    const response = await fetch(`${API_URL}/user/profile`, {
+      method: 'GET',
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    return handleResponse(response);
+  },
+
+  updateProfile: async (token, profileData) => {
+    const response = await fetch(`${API_URL}/user/profile`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(profileData),
+    });
+    return handleResponse(response);
+  },
+
+  updateProfilePicture: async (token, formData) => {
+    const response = await fetch(`${API_URL}/user/profile-picture`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        // Note: 'Content-Type' is not set here.
+        // The browser will automatically set it to 'multipart/form-data' with the correct boundary for FormData.
+      },
+      body: formData,
+    });
+    return handleResponse(response);
+  },
 };
+
+
 
 export default api;

@@ -84,6 +84,8 @@ const GenerateFeedback = () => {
       {/* REMOVE: sidebarActive, sidebarOpen, navItemRefs, indicatorStyle, sidebar/nav rendering, and sidebar-related useEffects */}
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-h-screen">
+
+        
         {/* Header */}
         <header className="bg-white/80 backdrop-blur-xl border-b border-white/20 px-6 py-4 sticky top-0 z-30">
           <div className="flex items-center justify-between">

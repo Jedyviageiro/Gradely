@@ -144,7 +144,7 @@ const UserDashboard = ({
   }, [essays, activeTab, searchQuery]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50">
+    <>
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-xl px-6 py-4 sticky top-0 z-30 w-full">
         <div className="flex items-center justify-between">
@@ -349,7 +349,7 @@ const UserDashboard = ({
           />
         </Modal>
       </main>
-    </div>
+    </>
   );
 };
 
