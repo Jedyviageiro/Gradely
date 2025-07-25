@@ -3,17 +3,32 @@ require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
+const session = require('express-session');
+const passport = require('passport');
+require('./auth/googleStrategy'); // Load Google OAuth config
 const routes = require('./routes/allRoutes');
 
 const app = express();
 
-// Configure CORS to allow requests only from your frontend client
+// CORS config
 const corsOptions = {
   origin: 'http://localhost:5173',
-  optionsSuccessStatus: 200 // For legacy browser support
+  credentials: true, // 👈 Important: allow cookies for session
+  optionsSuccessStatus: 200
 };
 
 app.use(cors(corsOptions));
+
+// Session middleware (must be before passport)
+app.use(session({
+  secret: 'your-secret',
+  resave: false,
+  saveUninitialized: false
+}));
+
+// Passport setup
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.use(express.json());
 app.use('/api', routes);

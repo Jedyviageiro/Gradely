@@ -7,6 +7,8 @@ CREATE TABLE users (
     last_name VARCHAR(50),
     profile_picture_url VARCHAR(255), -- Add this line
     is_email_confirmed BOOLEAN DEFAULT FALSE,
+    google_id VARCHAR(255) UNIQUE,
+    avatar_url TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

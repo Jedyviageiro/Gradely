@@ -16,6 +16,7 @@ import ChatModal from './components/ui/ChatModal.jsx';
 import { useState, useEffect, useCallback } from 'react';
 import api from './services/api';
 import MainLayout from './components/ui/MainLayout.jsx';
+import AuthCallback from './pages/AuthCallback.jsx';
 
 function App() {
   // Global essays state
@@ -46,6 +47,8 @@ function App() {
   // Fetch essays on mount
   useEffect(() => {
     fetchEssays();
+    // Since fetchEssays is memoized with useCallback, we can safely add it
+    // to the dependency array, satisfying the exhaustive-deps rule.
   }, [fetchEssays]);
 
   return (
@@ -60,6 +63,7 @@ function App() {
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/confirm-email/:token" element={<ConfirmEmail />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
               <Route
                 path="/dashboard"
                 element={

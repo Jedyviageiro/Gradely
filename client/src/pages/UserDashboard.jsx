@@ -93,14 +93,16 @@ const UserDashboard = ({
     if (token) {
       try {
         const decoded = jwtDecode(token);
-        console.log('Decoded JWT token:', decoded); // This is great for debugging!
-        // Try different possible property names for first name
-        const firstName = decoded.first_name || decoded.firstName || decoded.name || decoded.username;
-        if (firstName) {
-          setUserName(firstName);
+        // Construct the full name from the token
+        const fullName = [decoded.first_name, decoded.last_name]
+          .filter(Boolean) // Remove any null/undefined parts
+          .join(' ');
+
+        if (fullName) {
+          setUserName(fullName);
         } else {
-          // Add a warning if the name isn't in the token.
-          console.warn("User's first name not found in JWT token payload.", decoded);
+          // Fallback if no name parts are found
+          console.warn("User's name not found in JWT token payload.", decoded);
           setUserName('User'); // Provide a fallback name.
         }
       } catch (e) {

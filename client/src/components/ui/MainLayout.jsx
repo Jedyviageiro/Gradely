@@ -1,8 +1,8 @@
 import { useState, useRef, useMemo, useEffect } from 'react';
 import { useNavigate, useLocation, NavLink } from 'react-router-dom';
 import { FileText, BookOpen, Wand2, MessageSquare, LogOut, Menu } from 'lucide-react';
-import { useChatModal } from '../../hooks/useChatModal.jsx';
-import { jwtDecode } from 'jwt-decode';
+import { useChatModal } from '../../hooks/useChatModal';
+import useAuth from '../../hooks/useAuth';
 
 const navItems = [
   { label: 'My Essays', icon: <FileText size={20} />, path: '/dashboard' },
@@ -14,13 +14,8 @@ const navItems = [
 export default function MainLayout({ children }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, logout } = useAuth(); // Get live user data and logout function from context
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [user, setUser] = useState({
-    fullName: 'User',
-    email: '',
-    initial: 'U',
-    profilePictureUrl: '', // Add this to hold the profile picture URL
-  });
   const [sidebarActive, setSidebarActive] = useState(() => {
     const match = navItems.find(item => item.path && location.pathname.startsWith(item.path));
     return match ? match.label : 'My Essays';
@@ -29,27 +24,16 @@ export default function MainLayout({ children }) {
   const [indicatorStyle, setIndicatorStyle] = useState({});
   const { openChat } = useChatModal();
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      try {
-        const decoded = jwtDecode(token);
-        const fullName = `${decoded.first_name || ''} ${decoded.last_name || ''}`.trim();
-        const initial = (decoded.first_name || 'U').charAt(0).toUpperCase();
-        setUser({
-          fullName: fullName || 'User',
-          email: decoded.email || '',
-          initial: initial,
-          profilePictureUrl: decoded.profile_picture_url || '', // Fetch profile picture URL from token
-        });
-      } catch (e) {
-        console.error('Invalid token in MainLayout:', e);
-      }
-    }
-  }, [location.pathname]); // Re-decode token on navigation to reflect profile updates
+  // Derive display values from the live user object from context
+  const userProfile = useMemo(() => ({
+    fullName: user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() : 'User',
+    email: user ? user.email : '',
+    initial: user ? (user.first_name || 'U').charAt(0).toUpperCase() : 'U',
+    profilePictureUrl: user ? user.avatar_url : '',
+  }), [user]);
 
   // Animate indicator
-  useMemo(() => {
+  useEffect(() => {
     const activeNavIndex = navItems.findIndex(item => sidebarActive === item.label);
     const activeNavEl = navItemRefs.current[activeNavIndex];
     if (activeNavEl) {
@@ -59,12 +43,6 @@ export default function MainLayout({ children }) {
       });
     }
   }, [sidebarActive, sidebarOpen]);
-
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/login');
-  };
 
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50">
@@ -124,24 +102,24 @@ export default function MainLayout({ children }) {
                 ? 'bg-gradient-to-r from-blue-50 to-blue-100/50'
                 : 'hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100/50'
             }`}
-            title={!sidebarOpen ? `${user.fullName}\n${user.email}` : ''}
+            title={!sidebarOpen ? `${userProfile.fullName}\n${userProfile.email}` : ''}
           >
             {/* Profile Image */}
             <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0">
-              {user.profilePictureUrl ? (
+              {userProfile.profilePictureUrl ? (
                 <img
-                  src={user.profilePictureUrl} 
+                  src={userProfile.profilePictureUrl}
                   alt="Profile"
                   className="w-full h-full object-cover rounded-full"
                 />
               ) : (
-                <span>{user.initial}</span>
+                <div className="w-full h-full rounded-full bg-teal-600 flex items-center justify-center">{userProfile.initial}</div>
               )}
             </div>
             {sidebarOpen && (
               <div className="overflow-hidden">
-                <div className="font-semibold text-gray-800 truncate">{user.fullName}</div>
-                <div className="text-xs text-gray-500 truncate">{user.email}</div>
+                <div className="font-semibold text-gray-800 truncate">{userProfile.fullName}</div>
+                <div className="text-xs text-gray-500 truncate">{userProfile.email}</div>
               </div>
             )}
           </NavLink>

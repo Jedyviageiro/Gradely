@@ -4,7 +4,8 @@ import { User, Mail, Bell, Settings, AlertTriangle, UserIcon, CheckCircle, Loade
 import api from '../services/api';
 import { jwtDecode } from 'jwt-decode';
 import gradelyLogo from '../assets/gradely-images/gradely-logo.png';
-import EmailsAndPassword from './EmailsAndPassword'; // Import the new component
+import EmailsAndPassword from './EmailsAndPassword';
+import useAuth from '../hooks/useAuth'; // Import the useAuth hook
 
 const ManageProfile = () => {
   const [formData, setFormData] = useState({
@@ -23,6 +24,9 @@ const ManageProfile = () => {
   
   // Ref for file input
   const fileInputRef = useRef(null);
+
+  // Get the login function from AuthContext to update global state
+  const { login } = useAuth();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -68,8 +72,9 @@ const ManageProfile = () => {
         first_name: formData.first_name,
         last_name: formData.last_name,
       });
-      // Update the token in localStorage with the new one from the server
-      localStorage.setItem('token', response.token);
+      // Use the login function to update the global auth state and localStorage
+      login(response.token);
+
       setOriginalData(response.user);
       setFormData(response.user); // Resync form data with the new original data
       setStatus('success');
@@ -109,8 +114,9 @@ const ManageProfile = () => {
 
       const response = await api.updateProfilePicture(token, formData);
       
-      // Update the token and form data with the new profile picture
-      localStorage.setItem('token', response.token);
+      // Use the login function to update the global auth state and localStorage
+      login(response.token);
+
       setFormData(prev => ({ 
         ...prev, 
         profile_picture_url: response.user.profile_picture_url 

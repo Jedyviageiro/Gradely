@@ -3,6 +3,109 @@ import { X, MessageSquare, Send, ChevronDown, Check } from 'lucide-react';
 import gradelyLogo from '../../assets/gradely-images/gradely-logo.png';
 import { useChatModal } from "../../hooks/useChatModal.jsx";
 
+// Component to render formatted AI messages
+function FormattedMessage({ text }) {
+  const formatText = (text) => {
+    // Split text into lines
+    const lines = text.split('\n');
+    const elements = [];
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      
+      if (!line) {
+        elements.push(<br key={i} />);
+        continue;
+      }
+      
+      // Check for strengths section (✨ Strengths:)
+      if (line.match(/^✨\s*Strengths?:/i)) {
+        elements.push(
+          <div key={i} className="mt-4 mb-2">
+            <h4 className="font-bold text-blue-700 flex items-center gap-2">
+              <span>✨</span>
+              <span>Strengths:</span>
+            </h4>
+          </div>
+        );
+        continue;
+      }
+      
+      // Check for suggestions section (💡 Suggestions:)
+      if (line.match(/^💡\s*Suggestions?:/i)) {
+        elements.push(
+          <div key={i} className="mt-4 mb-2">
+            <h4 className="font-bold text-amber-700 flex items-center gap-2">
+              <span>💡</span>
+              <span>Suggestions:</span>
+            </h4>
+          </div>
+        );
+        continue;
+      }
+      
+      // Check for bullet points (starting with - or •)
+      if (line.match(/^[-•]\s+/)) {
+        const bulletText = line.replace(/^[-•]\s+/, '');
+        const formattedBulletText = formatInlineText(bulletText);
+        elements.push(
+          <div key={i} className="ml-4 mb-1 flex items-start gap-2">
+            <span className="text-gray-500 mt-1 text-xs">•</span>
+            <span className="flex-1 text-sm">{formattedBulletText}</span>
+          </div>
+        );
+        continue;
+      }
+      
+      // Regular paragraph
+      const formattedLine = formatInlineText(line);
+      elements.push(
+        <p key={i} className="mb-2 last:mb-0">
+          {formattedLine}
+        </p>
+      );
+    }
+    
+    return elements;
+  };
+  
+  const formatInlineText = (text) => {
+    // Handle bold text (**text** or __text__)
+    const parts = [];
+    let currentIndex = 0;
+    
+    // Regex to match bold patterns
+    const boldRegex = /(\*\*([^*]+)\*\*|__([^_]+)__)/g;
+    let match;
+    
+    while ((match = boldRegex.exec(text)) !== null) {
+      // Add text before the match
+      if (match.index > currentIndex) {
+        parts.push(text.slice(currentIndex, match.index));
+      }
+      
+      // Add the bold text
+      const boldText = match[2] || match[3]; // Get the text inside ** or __
+      parts.push(<strong key={match.index} className="font-semibold text-gray-900">{boldText}</strong>);
+      
+      currentIndex = match.index + match[0].length;
+    }
+    
+    // Add remaining text
+    if (currentIndex < text.length) {
+      parts.push(text.slice(currentIndex));
+    }
+    
+    return parts.length > 0 ? parts : text;
+  };
+  
+  return (
+    <div className="text-sm leading-relaxed">
+      {formatText(text)}
+    </div>
+  );
+}
+
 export default function ChatModal() {
   // Use the correct, modern state from the context
   const {
@@ -15,7 +118,7 @@ export default function ChatModal() {
     error,
     reviewedEssays,
     handleSendMessage,
-    selectEssay,// Use openChat to properly initialize the chat with a greeting
+    selectEssay,
   } = useChatModal();
 
   // Manage input state locally within this component
@@ -157,7 +260,11 @@ export default function ChatModal() {
                       ? 'bg-red-50 text-red-800 border border-red-200'
                       : 'bg-white text-gray-800 border border-gray-100'
                   }`}>
-                    <p className="text-sm leading-relaxed">{msg.text}</p>
+                    {msg.role === 'user' ? (
+                      <p className="text-sm leading-relaxed">{msg.text}</p>
+                    ) : (
+                      <FormattedMessage text={msg.text} />
+                    )}
                   </div>
                 </div>
               ))}
@@ -183,13 +290,19 @@ export default function ChatModal() {
             </div>
             {/* Input area */}
             <div className="border-t border-gray-100 bg-white px-6 py-4">
-              <form className="flex items-center gap-3" onSubmit={handleChatSubmit}>
+              <div className="flex items-center gap-3">
                 <div className="flex-1 relative">
                   <input
                     className="w-full border-2 border-gray-200 rounded-2xl px-5 py-3 pr-12 focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all duration-200 text-base bg-gray-50/50 disabled:bg-gray-200 disabled:text-gray-500 placeholder:text-gray-400"
                     placeholder="Ask about your essay feedback..."
                     value={input}
                     onChange={e => setInput(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleChatSubmit(e);
+                      }
+                    }}
                     disabled={isLoading}
                   />
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-gray-400">
@@ -197,17 +310,17 @@ export default function ChatModal() {
                   </div>
                 </div>
                 <button 
-                  type="submit" 
+                  onClick={handleChatSubmit}
                   className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white p-3.5 rounded-2xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none transform hover:scale-105" 
                   disabled={isLoading || !input.trim()}
                 >
                   <Send size={20} />
                 </button>
-              </form>
+              </div>
             </div>
           </div>
         )}
       </div>
     </div>
   );
-} 
+}
