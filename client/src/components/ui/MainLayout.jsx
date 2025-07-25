@@ -29,7 +29,7 @@ export default function MainLayout({ children }) {
     fullName: user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() : 'User',
     email: user ? user.email : '',
     initial: user ? (user.first_name || 'U').charAt(0).toUpperCase() : 'U',
-    profilePictureUrl: user ? user.avatar_url : '',
+    profilePictureUrl: user ? user.profile_picture_url : '', // Read from the standardized key
   }), [user]);
 
   // Animate indicator

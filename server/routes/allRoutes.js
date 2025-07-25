@@ -38,8 +38,8 @@ router.get(
       user_id: user.user_id,
       email: user.email,
       first_name: user.first_name,
-      last_name: user.last_name, // Add last_name to the token
-      avatar_url: user.avatar_url, // Add avatar_url to the token
+      last_name: user.last_name,
+      profile_picture_url: user.profile_picture_url, // Standardize key to match the rest of the app
     };
 
     // Sign the token
